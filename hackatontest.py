@@ -155,21 +155,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-  
-    
-import streamlit as st
-import requests
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-import streamlit as st
-import requests
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Dataset ophalen
 @st.cache_data
@@ -287,3 +272,4 @@ with tab2:
     # Toon de vliegtuigen in de geselecteerde categorie en hun gemiddelde SEL_dB
     st.write(f"Vliegtuigen in de categorie {categorie}:")
     st.write(filtered_data[['vliegtuig_type', 'gemiddelde_SEL_dB']])
+
