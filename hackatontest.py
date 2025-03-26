@@ -4,22 +4,41 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
 
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
 def fetch_data(start_date, end_date):
     url = f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B%5D=21&conditions%5B2%5D%5B%5D=32&conditions%5B2%5D%5B%5D=33&conditions%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
     
-    response = requests.get(url)
-    if response.status_code == 200:  # Controleer of het antwoord succesvol is
-        colnames = pd.DataFrame(response.json()['metadata'])
-        data = pd.DataFrame(response.json()['rows'])
-        data.columns = colnames.headers
-        data['time'] = pd.to_datetime(data['time'], unit='s')
-        return data
-    else:
-        st.error(f"Er is een probleem met het ophalen van de gegevens. Statuscode: {response.status_code}")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Zorgt ervoor dat een HTTP-fout een uitzondering veroorzaakt
+        
+        if response.status_code == 200:
+            colnames = pd.DataFrame(response.json()['metadata'])
+            data = pd.DataFrame(response.json()['rows'])
+            data.columns = colnames.headers
+            data['time'] = pd.to_datetime(data['time'], unit='s')
+            return data
+        else:
+            # Toon de volledige foutrespons van de server
+            st.error(f"Fout bij het ophalen van de gegevens. Statuscode: {response.status_code}")
+            st.write(response.text)  # Toon meer informatie van de server
+            return None
+            
+    except requests.exceptions.RequestException as e:
+        st.error(f"Er is een probleem met het ophalen van de gegevens van de API: {e}")
         return None
+
+# Mockdata voor testing als de API niet werkt
+def get_mock_data():
+    data = pd.DataFrame({
+        'time': pd.date_range(start="2025-01-01", periods=5, freq='D'),
+        'vliegtuig_type': ['Boeing 737-800', 'Embraer ERJ 170-200 STD', 'Boeing 777-300ER', 'Boeing 737-700', 'Airbus A320 214'],
+        'SEL_dB': [85, 90, 95, 100, 92],
+    })
+    return data
 
 # Cache de berekeningen van geluid per passagier en vracht
 @st.cache_data
@@ -27,7 +46,7 @@ def bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_fact
     results = []
 
     for _, row in data.iterrows():
-        vliegtuig_type = row['type']
+        vliegtuig_type = row['vliegtuig_type']
         if vliegtuig_type in vliegtuig_capaciteit:
             sel_dB = row['SEL_dB']
             passagiers = vliegtuig_capaciteit[vliegtuig_type]['passagiers']
@@ -50,13 +69,9 @@ vliegtuig_capaciteit = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
     'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
     'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
     'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
     'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
-    'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
-    'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
-    'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16}
 }
 
 # Stel de load factor in (85% van de capaciteit)
@@ -74,48 +89,48 @@ end_date_input = st.date_input("End Date", pd.to_datetime('2025-03-24'))
 start_date = int(pd.to_datetime(start_date_input).timestamp())
 end_date = int(pd.to_datetime(end_date_input).timestamp())
 
-# Haal de gegevens op
+# Haal de gegevens op van de API of gebruik mockdata
 data = fetch_data(start_date, end_date)
 
-if data is not None:
-    # Voer de berekeningen uit
-    resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor)
+if data is None:
+    st.warning("Er zijn geen gegevens opgehaald van de API. We gebruiken mockdata voor de visualisatie.")
+    data = get_mock_data()  # Gebruik mockdata als de API niet werkt
 
-    # Sorteer de resultaten
-    resultaten_sorted_passagier = resultaten.sort_values(by='geluid_per_passagier')
-    resultaten_sorted_vracht = resultaten.sort_values(by='geluid_per_vracht')
+# Voer de berekeningen uit
+resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor)
 
-    # Toon de resultaten als tabellen
-    st.subheader('Geluid per Passagier per Vliegtuigtype')
-    st.write(resultaten_sorted_passagier)
+# Sorteer de resultaten
+resultaten_sorted_passagier = resultaten.sort_values(by='geluid_per_passagier')
+resultaten_sorted_vracht = resultaten.sort_values(by='geluid_per_vracht')
 
-    st.subheader('Geluid per Ton Vracht per Vliegtuigtype')
-    st.write(resultaten_sorted_vracht)
+# Toon de resultaten als tabellen
+st.subheader('Geluid per Passagier per Vliegtuigtype')
+st.write(resultaten_sorted_passagier)
 
-    # Maak de grafieken
-    st.subheader('Grafieken')
+st.subheader('Geluid per Ton Vracht per Vliegtuigtype')
+st.write(resultaten_sorted_vracht)
 
-    # Maak de grafieken
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+# Maak de grafieken
+st.subheader('Grafieken')
 
-    # Geluid per Passagier
-    sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=resultaten_sorted_passagier, palette='viridis', ax=axes[0])
-    axes[0].set_title('Geluid per Passagier per Vliegtuigtype (Met Load Factor)', fontsize=14)
-    axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
-    axes[0].set_ylabel('Geluid per Passagier (dB)', fontsize=12)
-    axes[0].tick_params(axis='x', rotation=45)
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
-    # Geluid per Ton Vracht
-    sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=resultaten_sorted_vracht, palette='viridis', ax=axes[1])
-    axes[1].set_title('Geluid per Ton Vracht per Vliegtuigtype (Zonder Load Factor bij Vracht)', fontsize=14)
-    axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
-    axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
-    axes[1].tick_params(axis='x', rotation=45)
+# Geluid per Passagier
+sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=resultaten_sorted_passagier, palette='viridis', ax=axes[0])
+axes[0].set_title('Geluid per Passagier per Vliegtuigtype (Met Load Factor)', fontsize=14)
+axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
+axes[0].set_ylabel('Geluid per Passagier (dB)', fontsize=12)
+axes[0].tick_params(axis='x', rotation=45)
 
-    # Pas de lay-out aan voor betere zichtbaarheid
-    plt.tight_layout()
+# Geluid per Ton Vracht
+sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=resultaten_sorted_vracht, palette='viridis', ax=axes[1])
+axes[1].set_title('Geluid per Ton Vracht per Vliegtuigtype (Zonder Load Factor bij Vracht)', fontsize=14)
+axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
+axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
+axes[1].tick_params(axis='x', rotation=45)
 
-    # Toon de grafiek in Streamlit
-    st.pyplot(fig)
-else:
-    st.warning("Geen data gevonden voor de opgegeven datums.")
+# Pas de lay-out aan voor betere zichtbaarheid
+plt.tight_layout()
+
+# Toon de grafiek in Streamlit
+st.pyplot(fig)
