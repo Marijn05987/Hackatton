@@ -21,13 +21,10 @@ def fetch_data():
             data['time'] = pd.to_datetime(data['time'], unit='s')
             return data
         else:
-            st.error(f"Fout bij het ophalen van de gegevens. Statuscode: {response.status_code}")
-            st.write(response.text)  # Toon meer informatie van de server
-            return None
+            return None  # Als er een fout is, geef dan geen data terug
             
-    except requests.exceptions.RequestException as e:
-        st.error(f"Er is een probleem met het ophalen van de gegevens van de API: {e}")
-        return None
+    except requests.exceptions.RequestException:
+        return None  # Als er een netwerkfout of andere fout is, geef dan ook geen data terug
 
 # Mockdata voor 10 vliegtuigen
 def get_mock_data():
@@ -89,7 +86,6 @@ st.markdown('Dit applicatie berekent en toont het geluid per passagier en per to
 data = fetch_data()
 
 if data is None:
-    st.warning("Er zijn geen gegevens opgehaald van de API. We gebruiken mockdata voor de visualisatie.")
     data = get_mock_data()  # Gebruik mockdata als de API niet werkt
 
 # Voer de berekeningen uit
@@ -98,13 +94,6 @@ resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, 
 # Sorteer de resultaten
 resultaten_sorted_passagier = resultaten.sort_values(by='geluid_per_passagier')
 resultaten_sorted_vracht = resultaten.sort_values(by='geluid_per_vracht')
-
-# Toon de resultaten als tabellen
-st.subheader('Geluid per Passagier per Vliegtuigtype')
-st.write(resultaten_sorted_passagier)
-
-st.subheader('Geluid per Ton Vracht per Vliegtuigtype')
-st.write(resultaten_sorted_vracht)
 
 # Maak de grafieken
 st.subheader('Grafieken')
