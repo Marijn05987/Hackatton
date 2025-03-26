@@ -3,21 +3,43 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import streamlit as st
+
+# Streamlit configuratie
+st.set_page_config(page_title="Vliegtuig Geluid Analyseren", layout="wide")
+
+# Haal data op via de API
 start_date = int(pd.to_datetime('2025-01-01').timestamp())
 end_date = int(pd.to_datetime('2025-03-24').timestamp())
-response = requests.get(f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B2%5D%5B%5D=21&conditions%5B2%5D%5B2%5D%5B%5D=32&conditions%5B2%5D%5B2%5D%5B%5D=33&conditions%5B2%5D%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags')
-colnames = pd.DataFrame(response.json()['metadata'])
-data = pd.DataFrame(response.json()['rows'])
-data.columns = colnames.headers
-data['time'] = pd.to_datetime(data['time'], unit='s')
+
+# Voeg een timeout toe om lange wachttijden te vermijden
+response = requests.get(f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B%5D=21&conditions%5B2%5D%5B%5D=32&conditions%5B2%5D%5B%5D=33&conditions%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags', timeout=10)
+
+# Controleer of we een succesvolle response hebben gekregen
+if response.status_code == 200:
+    print("Response ontvangen!")
+    try:
+        # JSON-data uit de response halen
+        colnames = pd.DataFrame(response.json()['metadata'])
+        data = pd.DataFrame(response.json()['rows'])
+        data.columns = colnames.headers
+        data['time'] = pd.to_datetime(data['time'], unit='s')
+        print("Gegevens zijn geladen.")
+    except ValueError:
+        print("Fout bij het decoderen van JSON")
+        print(response.text)
+else:
+    print(f"Error: {response.status_code}")
+    print(response.text)  # Print de foutmelding van de server
+
 # Stel vliegtuigcapaciteit per vliegtuigtype in (schatting)
 vliegtuig_capaciteit = {
-    'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},  # Geschatte capaciteit
+    'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
     'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},  # Zelfde type als de vorige, maar met andere naam
+    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8}, 
     'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
-    'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
+    'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20}, 
     'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
     'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
     'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
@@ -86,4 +108,5 @@ axes[1].tick_params(axis='x', rotation=45)
 plt.tight_layout()
 
 # Toon de grafiek
-plt.show()
+st.pyplot(fig)
+
