@@ -8,7 +8,7 @@ import seaborn as sns
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
 def fetch_data():
-    url = 'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D=1735689600&conditions%5B0%5D%5B%5D=%3C&conditions%5B0%5D%5B%5D=1742774400&conditions%5B%5D%5B%5D=label&conditions%5B%5D%5B%5D=in&conditions%5B%5D%5B%5D=21&conditions%5B%5D%5B%5D=32&conditions%5B%5D%5B%5D=33&conditions%5B%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
+    url = 'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D=1735689600&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D=1742774400&conditions%5B%5D%5B%5D=label&conditions%5B%5D%5B%5D=in&conditions%5B%5D%5B%5D=21&conditions%5B%5D%5B%5D=32&conditions%5B%5D%5B%5D=33&conditions%5B%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
     
     try:
         response = requests.get(url)
@@ -21,11 +21,9 @@ def fetch_data():
             data['time'] = pd.to_datetime(data['time'], unit='s')
             return data
         else:
-            st.error(f"Fout bij ophalen van data. Statuscode: {response.status_code}")
             return None  # Als er een fout is, geef dan geen data terug
             
-    except requests.exceptions.RequestException as e:
-        st.error(f"Er is een fout opgetreden bij het ophalen van de gegevens: {e}")
+    except requests.exceptions.RequestException:
         return None  # Als er een netwerkfout of andere fout is, geef dan ook geen data terug
 
 # Mockdata voor 10 vliegtuigen
@@ -39,9 +37,9 @@ def get_mock_data():
     })
     return data
 
-# Cache de berekeningen van geluid per passagier
+# Cache de berekeningen van geluid per passagier en vracht
 @st.cache_data
-def bereken_geluid_per_passagier(data, vliegtuig_capaciteit, load_factor):
+def bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor):
     results = []
 
     for _, row in data.iterrows():
@@ -49,83 +47,118 @@ def bereken_geluid_per_passagier(data, vliegtuig_capaciteit, load_factor):
         if vliegtuig_type in vliegtuig_capaciteit:
             sel_dB = row['SEL_dB']
             passagiers = vliegtuig_capaciteit[vliegtuig_type]['passagiers']
+            vracht_ton = vliegtuig_capaciteit[vliegtuig_type]['vracht_ton']
             
             passagiers_bezet = passagiers * load_factor
             geluid_per_passagier = sel_dB / passagiers_bezet if passagiers_bezet != 0 else np.nan
+            geluid_per_vracht = sel_dB / vracht_ton if vracht_ton != 0 else np.nan
             
             results.append({
                 'vliegtuig_type': vliegtuig_type,
                 'passagiers': passagiers,
-                'geluid_per_passagier': geluid_per_passagier
+                'geluid_per_passagier': geluid_per_passagier,
+                'geluid_per_vracht': geluid_per_vracht
             })
 
     return pd.DataFrame(results)
 
 # Stel vliegtuigcapaciteit in
-vliegtuig_capaciteit_passagiersaantal = {
+vliegtuig_capaciteit = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
     'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
     'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
     'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
     'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
     'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
     'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
     'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
-    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
+    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45}  # Toegevoegd vliegtuigtype
 }
 
 # Stel de load factor in (85% van de capaciteit)
 load_factor = 0.85
 
-# Definieer passagierscategorieën
-def categoriseer_vliegtuig_op_passagiers(vliegtuig_capaciteit):
-    categorieen = {'Small': [], 'Medium': [], 'Large': []}
-    for vliegtuig, capaciteit in vliegtuig_capaciteit.items():
-        passagiers = capaciteit['passagiers']
-        if passagiers <= 100:
-            categorieen['Small'].append(vliegtuig)
-        elif 100 < passagiers <= 200:
-            categorieen['Medium'].append(vliegtuig)
-        else:
-            categorieen['Large'].append(vliegtuig)
-    return categorieen
-
 # Streamlit UI
-st.title('Geluid per Passagier per Categorie Vliegtuig')
-st.markdown('Kies een passagierscategorie om de geluiden van vliegtuigen te vergelijken.')
+st.title('Geluid per Passagier en Vracht per Vliegtuigtype')
+st.markdown('Dit applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart.')
 
 # Haal de gegevens op van de API of gebruik mockdata
 data = fetch_data()
 
 if data is None:
-    st.warning("Geen live data beschikbaar, we gebruiken mockdata.")
     data = get_mock_data()  # Gebruik mockdata als de API niet werkt
 
 # Voer de berekeningen uit
-resultaten = bereken_geluid_per_passagier(data, vliegtuig_capaciteit_passagiersaantal, load_factor)
+resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor)
 
-# Categorieën voor de dropdown
-categorieen = categoriseer_vliegtuig_op_passagiers(vliegtuig_capaciteit_passagiersaantal)
-categorie_keuze = st.selectbox('Kies een passagierscategorie:', options=['Small', 'Medium', 'Large'])
+# Sorteer de resultaten
+resultaten_sorted_passagier = resultaten.sort_values(by='geluid_per_passagier')
+resultaten_sorted_vracht = resultaten.sort_values(by='geluid_per_vracht')
 
-# Filter op basis van de gekozen categorie
-vliegtuigen_in_categorie = categorieen[categorie_keuze]
-resultaten_categorie = resultaten[resultaten['vliegtuig_type'].isin(vliegtuigen_in_categorie)]
+# Keuze dropdown voor de grafieken
+grafiek_keuze = st.selectbox("Kies welke grafiek je wilt zien:", 
+                             ["Geluid per Passagier", "Geluid per Vracht"])
 
-# Maak de grafiek
-st.subheader(f'Geluid per Passagier in de {categorie_keuze} Categorie')
+# Maak de grafieken op basis van de keuze van de gebruiker
+st.subheader('Grafieken')
 
-fig, ax = plt.subplots(figsize=(10, 6))
-sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=resultaten_categorie, palette='viridis', ax=ax)
-ax.set_title(f'Geluid per Passagier voor {categorie_keuze} Vliegtuigen', fontsize=14)
-ax.set_xlabel('Vliegtuigtype', fontsize=12)
-ax.set_ylabel('Geluid per Passagier (dB)', fontsize=12)
-ax.tick_params(axis='x', rotation=45)
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+if grafiek_keuze == "Geluid per Passagier":
+    # Geluid per Passagier
+    sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=resultaten_sorted_passagier, palette='viridis', ax=axes[0])
+    axes[0].set_title('Geluid per Passagier per Vliegtuigtype (Met Load Factor)', fontsize=14)
+    axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
+    axes[0].set_ylabel('Geluid per Passagier (dB)', fontsize=12)
+    axes[0].tick_params(axis='x', rotation=45)
+
+    # Geluid per Ton Vracht
+    sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=resultaten_sorted_vracht, palette='viridis', ax=axes[1])
+    axes[1].set_title('Geluid per Ton Vracht per Vliegtuigtype (Zonder Load Factor bij Vracht)', fontsize=14)
+    axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
+    axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
+    axes[1].tick_params(axis='x', rotation=45)
+
+elif grafiek_keuze == "Geluid per Vracht":
+    # Grafiek voor geluid per vracht
+    sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=resultaten_sorted_vracht, palette='viridis', ax=axes[0])
+    axes[0].set_title('Geluid per Ton Vracht per Vliegtuigtype', fontsize=14)
+    axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
+    axes[0].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
+    axes[0].tick_params(axis='x', rotation=45)
 
 # Pas de lay-out aan voor betere zichtbaarheid
 plt.tight_layout()
 
 # Toon de grafiek in Streamlit
 st.pyplot(fig)
+
+# Groeperen op passagiers aantal en vergelijken
+st.subheader('Vergelijking van Vliegtuigen op Basis van Passagiersaantal')
+
+# Categoriseer vliegtuigen op basis van passagiers
+def categorize_by_passenger(passenger_count):
+    if passenger_count <= 100:
+        return '0-100 Passagiers'
+    elif passenger_count <= 150:
+        return '101-150 Passagiers'
+    elif passenger_count <= 200:
+        return '151-200 Passagiers'
+    else:
+        return '201+ Passagiers'
+
+resultaten['passagiers_categorie'] = resultaten['passagiers'].apply(categorize_by_passenger)
+
+# Maak de grafiek voor de categorisatie
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='passagiers_categorie', y='geluid_per_passagier', data=resultaten, palette='Set2')
+
+plt.title('Vergelijking van Geluid per Passagier per Passagierscategorie', fontsize=16)
+plt.xlabel('Passagierscategorie', fontsize=12)
+plt.ylabel('Geluid per Passagier (dB)', fontsize=12)
+plt.xticks(rotation=45)
+
+# Toon de grafiek in Streamlit
+st.pyplot(plt)
+
