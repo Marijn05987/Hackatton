@@ -5,17 +5,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Cache the data fetching function to avoid unnecessary requests
+# Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache
 def fetch_data(start_date, end_date):
-    response = requests.get(f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B2%5D%5B%5D=21&conditions%5B2%5D%5B2%5D%5B%5D=32&conditions%5B2%5D%5B%5D=33&conditions%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags')
-    colnames = pd.DataFrame(response.json()['metadata'])
-    data = pd.DataFrame(response.json()['rows'])
-    data.columns = colnames.headers
-    data['time'] = pd.to_datetime(data['time'], unit='s')
-    return data
+    url = f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B2%5D%5B%5D=21&conditions%5B2%5D%5B2%5D%5B%5D=32&conditions%5B2%5D%5B%5D=33&conditions%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Zorgt ervoor dat een HTTP-fout een uitzondering veroorzaakt
+        colnames = pd.DataFrame(response.json()['metadata'])
+        data = pd.DataFrame(response.json()['rows'])
+        data.columns = colnames.headers
+        data['time'] = pd.to_datetime(data['time'], unit='s')
+        return data
+    except requests.exceptions.RequestException as e:
+        st.error(f"Er is een probleem met het ophalen van de gegevens van de API: {e}")
+        st.stop()  # Stop de app als er een probleem is bij het ophalen van de gegevens
+    except Exception as e:
+        st.error(f"Er is een onverwachte fout opgetreden: {e}")
+        st.stop()  # Stop de app als er een onverwachte fout is
 
-# Cache the computation function for results
+# Cache de berekeningen van geluid per passagier en vracht
 @st.cache
 def bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor):
     results = []
@@ -39,7 +49,7 @@ def bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_fact
 
     return pd.DataFrame(results)
 
-# Set airplane capacity estimation
+# Stel vliegtuigcapaciteit in
 vliegtuig_capaciteit = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
@@ -53,42 +63,42 @@ vliegtuig_capaciteit = {
     'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16}
 }
 
-# Set the load factor (85% occupancy)
+# Stel de load factor in (85% van de capaciteit)
 load_factor = 0.85
 
 # Streamlit UI
 st.title('Geluid per Passagier en Vracht per Vliegtuigtype')
 st.markdown('Dit applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart.')
 
-# Date Range input from user
+# Date Range input van gebruiker
 start_date_input = st.date_input("Start Date", pd.to_datetime('2025-01-01'))
 end_date_input = st.date_input("End Date", pd.to_datetime('2025-03-24'))
 
-# Convert dates to UNIX timestamps
+# Converteer de datums naar UNIX-tijdstempels
 start_date = int(pd.to_datetime(start_date_input).timestamp())
 end_date = int(pd.to_datetime(end_date_input).timestamp())
 
-# Fetch the data
+# Haal de gegevens op
 data = fetch_data(start_date, end_date)
 
-# Perform calculations
+# Voer de berekeningen uit
 resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor)
 
-# Sort the results
+# Sorteer de resultaten
 resultaten_sorted_passagier = resultaten.sort_values(by='geluid_per_passagier')
 resultaten_sorted_vracht = resultaten.sort_values(by='geluid_per_vracht')
 
-# Display results as tables
+# Toon de resultaten als tabellen
 st.subheader('Geluid per Passagier per Vliegtuigtype')
 st.write(resultaten_sorted_passagier)
 
 st.subheader('Geluid per Ton Vracht per Vliegtuigtype')
 st.write(resultaten_sorted_vracht)
 
-# Plot charts
+# Maak de grafieken
 st.subheader('Grafieken')
 
-# Create the plots
+# Maak de grafieken
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
 # Geluid per Passagier
@@ -105,8 +115,8 @@ axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
 axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
 axes[1].tick_params(axis='x', rotation=45)
 
-# Adjust the layout for better visibility
+# Pas de lay-out aan voor betere zichtbaarheid
 plt.tight_layout()
 
-# Display the plot in Streamlit
+# Toon de grafiek in Streamlit
 st.pyplot(fig)
