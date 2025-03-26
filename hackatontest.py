@@ -155,6 +155,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+  
+    
+import streamlit as st
+import requests
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # De rest van je bestaande code blijft hetzelfde, hieronder voeg ik alleen de wijzigingen toe voor de extra tab
 
@@ -183,22 +191,20 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30}
 }
 
-# Functie voor het berekenen van het gemiddelde geluid per passagier
-def gemiddelde_geluid_per_categorie(categorie, data, vliegtuig_capaciteit):
+# Functie voor het berekenen van het gemiddelde SEL_dB per passagierscategorie
+def gemiddelde_sel_db_per_categorie(categorie, data):
     vliegtuigen_in_categorie = data[data['passagiers_categorie'] == categorie]
-    totaal_geluid = 0
+    totaal_sel_db = 0
     aantal_vliegtuigen = 0
     
     for _, row in vliegtuigen_in_categorie.iterrows():
         vliegtuig_type = row['vliegtuig_type']
-        if vliegtuig_type in vliegtuig_capaciteit:
-            passagiers = vliegtuig_capaciteit[vliegtuig_type]['passagiers']
-            geluid_per_passagier = row['geluid_per_passagier']
-            totaal_geluid += geluid_per_passagier
-            aantal_vliegtuigen += 1
+        sel_db = row['SEL_dB']
+        totaal_sel_db += sel_db
+        aantal_vliegtuigen += 1
     
-    gemiddelde_geluid = totaal_geluid / aantal_vliegtuigen if aantal_vliegtuigen > 0 else 0
-    return gemiddelde_geluid
+    gemiddelde_sel_db = totaal_sel_db / aantal_vliegtuigen if aantal_vliegtuigen > 0 else 0
+    return gemiddelde_sel_db
 
 # Streamlit UI
 st.title('Geluid per Passagier en Vracht per Vliegtuigtype')
@@ -256,20 +262,19 @@ if tab == "Hoofdpagina":
     st.pyplot(fig)
 
 elif tab == "Vergelijking per Passagierscategorie":
-    st.subheader('Vergelijking van Geluid per Passagierscategorie')
+    st.subheader('Vergelijking van SEL_dB per Passagierscategorie')
     
     categorieen = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-250 Passagiers', '251-300 Passagiers', '301+ Passagiers']
     categorie_keuze = st.selectbox("Kies een Passagierscategorie", categorieen)
     
-    # Bereken het gemiddelde geluid per geselecteerde passagierscategorie
-    gemiddeld_geluid = gemiddelde_geluid_per_categorie(categorie_keuze, resultaten, vliegtuig_capaciteit)
+    # Bereken het gemiddelde SEL_dB per geselecteerde passagierscategorie
+    gemiddeld_sel_db = gemiddelde_sel_db_per_categorie(categorie_keuze, resultaten)
     
-    st.write(f"Het gemiddelde geluid per passagier in de categorie '{categorie_keuze}' is: {gemiddeld_geluid:.2f} dB")
+    st.write(f"Het gemiddelde SEL_dB in de categorie '{categorie_keuze}' is: {gemiddeld_sel_db:.2f} dB")
     
     # Toon de vliegtuigen in deze categorie
     st.write(f"Vliegtuigen in de categorie '{categorie_keuze}':")
     
     vliegtuigen_in_categorie = resultaten[resultaten['passagiers_categorie'] == categorie_keuze]
-    st.write(vliegtuigen_in_categorie[['vliegtuig_type', 'geluid_per_passagier']])
-
+    st.write(vliegtuigen_in_categorie[['vliegtuig_type', 'SEL_dB']])
 
