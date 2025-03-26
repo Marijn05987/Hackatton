@@ -1,4 +1,5 @@
-folium
-streamlit
+requests
 pandas
+numpy
 matplotlib
+seaborn
