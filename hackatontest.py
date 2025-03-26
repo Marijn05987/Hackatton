@@ -1,10 +1,10 @@
-
 import streamlit as st
 import requests
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
 
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
@@ -21,6 +21,8 @@ def fetch_data(start_date, end_date):
         return data
     except requests.exceptions.RequestException as e:
         st.error(f"Er is een probleem met het ophalen van de gegevens van de API: {e}")
+        if e.response is not None:
+            st.write(f"Foutdetails: {e.response.text}")  # Toon gedetailleerde foutmelding
         st.stop()  # Stop de app als er een probleem is bij het ophalen van de gegevens
     except Exception as e:
         st.error(f"Er is een onverwachte fout opgetreden: {e}")
@@ -121,3 +123,4 @@ plt.tight_layout()
 
 # Toon de grafiek in Streamlit
 st.pyplot(fig)
+
