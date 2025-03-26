@@ -117,54 +117,33 @@ if data is None:
 # Voer de berekeningen uit
 resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit_passagiersaantal, load_factor)
 
-# Sorteer de resultaten
-resultaten_sorted_passagier = resultaten.sort_values(by='geluid_per_passagier')
-resultaten_sorted_vracht = resultaten.sort_values(by='geluid_per_vracht')
-
-# Maak de grafieken
-st.subheader('Grafieken')
-
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-
-# Geluid per Passagier
-sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=resultaten_sorted_passagier, palette='viridis', ax=axes[0])
-axes[0].set_title('Geluid per Passagier per Vliegtuigtype (Met Load Factor)', fontsize=14)
-axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
-axes[0].set_ylabel('Geluid per Passagier (dB)', fontsize=12)
-axes[0].tick_params(axis='x', rotation=45)
-
-# Geluid per Ton Vracht
-sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=resultaten_sorted_vracht, palette='viridis', ax=axes[1])
-axes[1].set_title('Geluid per Ton Vracht per Vliegtuigtype (Zonder Load Factor bij Vracht)', fontsize=14)
-axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
-axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
-axes[1].tick_params(axis='x', rotation=45)
-
-# Pas de lay-out aan voor betere zichtbaarheid
-plt.tight_layout()
-
-# Toon de grafiek in Streamlit
-st.pyplot(fig)
-
 # Groeperen op passagiers aantal en vergelijken
 st.subheader('Vergelijking van Vliegtuigen op Basis van Passagiersaantal')
 
-# Categoriseer vliegtuigen op basis van passagiers
+# Categoriseer vliegtuigen op basis van passagiersaantal met meer categorieën
 def categorize_by_passenger(passenger_count):
-    if passenger_count <= 100:
-        return '0-100 Passagiers'
+    if passenger_count <= 50:
+        return '0-50 Passagiers'
+    elif passenger_count <= 100:
+        return '51-100 Passagiers'
     elif passenger_count <= 150:
         return '101-150 Passagiers'
     elif passenger_count <= 200:
         return '151-200 Passagiers'
+    elif passenger_count <= 250:
+        return '201-250 Passagiers'
+    elif passenger_count <= 300:
+        return '251-300 Passagiers'
     else:
-        return '201+ Passagiers'
+        return '301+ Passagiers'
 
 resultaten['passagiers_categorie'] = resultaten['passagiers'].apply(categorize_by_passenger)
 
 # Maak de grafiek voor de categorisatie
 plt.figure(figsize=(10, 6))
-sns.boxplot(x='passagiers_categorie', y='geluid_per_passagier', data=resultaten, palette='Set2')
+sns.boxplot(x='passagiers_categorie', y='geluid_per_passagier', data=resultaten, palette='Set2',
+            order=['0-50 Passagiers', '51-100 Passagiers', '101-150 Passagiers', 
+                    '151-200 Passagiers', '201-250 Passagiers', '251-300 Passagiers', '301+ Passagiers'])
 
 plt.title('Vergelijking van Geluid per Passagier per Passagierscategorie', fontsize=16)
 plt.xlabel('Passagierscategorie', fontsize=12)
@@ -173,3 +152,4 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
+
