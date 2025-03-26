@@ -123,4 +123,3 @@ plt.tight_layout()
 
 # Toon de grafiek in Streamlit
 st.pyplot(fig)
-
