@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import json
 
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
@@ -22,7 +21,6 @@ def fetch_data():
             data['time'] = pd.to_datetime(data['time'], unit='s')
             return data
         else:
-            # Toon de volledige foutrespons van de server
             st.error(f"Fout bij het ophalen van de gegevens. Statuscode: {response.status_code}")
             st.write(response.text)  # Toon meer informatie van de server
             return None
@@ -31,13 +29,13 @@ def fetch_data():
         st.error(f"Er is een probleem met het ophalen van de gegevens van de API: {e}")
         return None
 
-# Mockdata voor testing als de API niet werkt
+# Mockdata voor 10 vliegtuigen
 def get_mock_data():
     data = pd.DataFrame({
         'time': pd.date_range(start="2025-01-01", periods=10, freq='D'),  # 10 vliegtuigen
-        'vliegtuig_type': ['Boeing 737-800', 'Embraer ERJ 170-200 STD', 'Boeing 777-300ER', 
-                           'Boeing 737-700', 'Airbus A320 214', 'Boeing 737-800', 
-                           'Embraer ERJ 170-200 STD', 'Boeing 777-300ER', 'Boeing 737-700', 'Airbus A320 214'],
+        'vliegtuig_type': ['Boeing 737-800', 'Embraer ERJ 170-200 STD', 'Embraer ERJ 190-100 STD', 
+                           'Boeing 737-700', 'Airbus A320 214', 'Boeing 777-300ER', 
+                           'Boeing 737-900', 'Boeing 777-200', 'Airbus A319-111', 'Boeing 787-9'],
         'SEL_dB': [85, 90, 95, 100, 92, 88, 91, 96, 99, 93],
     })
     return data
