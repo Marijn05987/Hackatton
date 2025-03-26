@@ -8,8 +8,8 @@ import json
 
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
-def fetch_data(start_date, end_date):
-    url = f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B%5D=21&conditions%5B2%5D%5B%5D=32&conditions%5B2%5D%5B%5D=33&conditions%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
+def fetch_data():
+    url = 'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D=1735689600&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D=1742774400&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B%5D=21&conditions%5B2%5D%5B%5D=32&conditions%5B2%5D%5B%5D=33&conditions%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
     
     try:
         response = requests.get(url)
@@ -34,9 +34,11 @@ def fetch_data(start_date, end_date):
 # Mockdata voor testing als de API niet werkt
 def get_mock_data():
     data = pd.DataFrame({
-        'time': pd.date_range(start="2025-01-01", periods=5, freq='D'),
-        'vliegtuig_type': ['Boeing 737-800', 'Embraer ERJ 170-200 STD', 'Boeing 777-300ER', 'Boeing 737-700', 'Airbus A320 214'],
-        'SEL_dB': [85, 90, 95, 100, 92],
+        'time': pd.date_range(start="2025-01-01", periods=10, freq='D'),  # 10 vliegtuigen
+        'vliegtuig_type': ['Boeing 737-800', 'Embraer ERJ 170-200 STD', 'Boeing 777-300ER', 
+                           'Boeing 737-700', 'Airbus A320 214', 'Boeing 737-800', 
+                           'Embraer ERJ 170-200 STD', 'Boeing 777-300ER', 'Boeing 737-700', 'Airbus A320 214'],
+        'SEL_dB': [85, 90, 95, 100, 92, 88, 91, 96, 99, 93],
     })
     return data
 
@@ -72,6 +74,10 @@ vliegtuig_capaciteit = {
     'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
     'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
     'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
+    'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
+    'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
+    'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
+    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45}  # Toegevoegd vliegtuigtype
 }
 
 # Stel de load factor in (85% van de capaciteit)
@@ -81,16 +87,8 @@ load_factor = 0.85
 st.title('Geluid per Passagier en Vracht per Vliegtuigtype')
 st.markdown('Dit applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart.')
 
-# Date Range input van gebruiker
-start_date_input = st.date_input("Start Date", pd.to_datetime('2025-01-01'))
-end_date_input = st.date_input("End Date", pd.to_datetime('2025-03-24'))
-
-# Converteer de datums naar UNIX-tijdstempels
-start_date = int(pd.to_datetime(start_date_input).timestamp())
-end_date = int(pd.to_datetime(end_date_input).timestamp())
-
 # Haal de gegevens op van de API of gebruik mockdata
-data = fetch_data(start_date, end_date)
+data = fetch_data()
 
 if data is None:
     st.warning("Er zijn geen gegevens opgehaald van de API. We gebruiken mockdata voor de visualisatie.")
