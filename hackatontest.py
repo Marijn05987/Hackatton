@@ -8,7 +8,7 @@ import seaborn as sns
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
 def fetch_data():
-    url = 'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D=1735689600&conditions%5B0%5D%5B%5D=%3C&conditions%5B0%5D%5B%5D=1742774400&conditions%5B%5D%5B%5D=label&conditions%5B%5D%5B%5D=in&conditions%5B%5D%5B%5D=21&conditions%5B%5D%5B%5D=32&conditions%5B%5D%5B%5D=33&conditions%5B%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
+    url = 'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D=1735689600&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D=1742774400&conditions%5B%5D%5B%5D=label&conditions%5B%5D%5B%5D=in&conditions%5B%5D%5B%5D=21&conditions%5B%5D%5B%5D=32&conditions%5B%5D%5B%5D=33&conditions%5B%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
     
     try:
         response = requests.get(url)
@@ -73,7 +73,7 @@ vliegtuig_capaciteit = {
     'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
     'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
     'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
-    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45}
+    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45}  # Toegevoegd vliegtuigtype
 }
 
 # Stel de load factor in (85% van de capaciteit)
@@ -148,46 +148,3 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
-
-# Voeg tabbladen toe
-tabs = ["Hoofdpagina", "Vergelijking per Passagierscategorie"]
-tab = st.sidebar.radio("Selecteer een tabblad", tabs)
-
-# Haal data op van de API of gebruik mockdata
-data = fetch_data()
-
-# Bereken resultaten
-resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor)
-
-# Categoriseer de vliegtuigen per passagiersaantal
-resultaten['passagiers_categorie'] = resultaten['passagiers'].apply(categorize_by_passenger)
-
-if tab == "Hoofdpagina":
-    st.subheader('Geluid per Passagier en Vracht per Vliegtuigtype')
-
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=resultaten, palette='viridis', ax=axes[0])
-    axes[0].set_title('Geluid per Passagier per Vliegtuigtype (Met Load Factor)', fontsize=14)
-    axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
-    axes[0].set_ylabel('Geluid per Passagier (dB)', fontsize=12)
-    axes[0].tick_params(axis='x', rotation=45)
-
-    sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=resultaten, palette='viridis', ax=axes[1])
-    axes[1].set_title('Geluid per Ton Vracht per Vliegtuigtype (Zonder Load Factor bij Vracht)', fontsize=14)
-    axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
-    axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
-    axes[1].tick_params(axis='x', rotation=45)
-
-    plt.tight_layout()
-    st.pyplot(fig)
-
-elif tab == "Vergelijking per Passagierscategorie":
-    st.subheader('Vergelijking van Geluid per Passagierscategorie')
-    
-    categorieen = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-250 Passagiers', '251-300 Passagiers', '301+ Passagiers']
-    categorie_keuze = st.selectbox("Kies een Passagierscategorie", categorieen)
-    
-    # Toon vliegtuigen in deze categorie
-    vliegtuigen_in_categorie = resultaten[resultaten['passagiers_categorie'] == categorie_keuze]
-    st.write(f"Vliegtuigen in de categorie '{categorie_keuze}':")
-    st.write(vliegtuigen_in_categorie[['vliegtuig_type', 'geluid_per_passagier']])
