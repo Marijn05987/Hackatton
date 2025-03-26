@@ -102,39 +102,39 @@ passagierscategorie = st.selectbox(
     ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201+ Passagiers']
 )
 
-# Functie om vliegtuigen te categoriseren op basis van passagiers
-def categorize_by_passenger(passenger_count):
-    if passenger_count <= 100:
-        return '0-100 Passagiers'
-    elif passenger_count <= 150:
-        return '101-150 Passagiers'
-    elif passenger_count <= 200:
-        return '151-200 Passagiers'
-    else:
-        return '201+ Passagiers'
-
 # Filter de gegevens op basis van de geselecteerde passagierscategorie
 if passagierscategorie == '0-100 Passagiers':
-    filtered_resultaten = resultaten[resultaten['passagiers_categorie'] == '0-100 Passagiers']
+    filtered_resultaten = resultaten[resultaten['passagiers'] <= 100]
 elif passagierscategorie == '101-150 Passagiers':
-    filtered_resultaten = resultaten[resultaten['passagiers_categorie'] == '101-150 Passagiers']
+    filtered_resultaten = resultaten[(resultaten['passagiers'] > 100) & (resultaten['passagiers'] <= 150)]
 elif passagierscategorie == '151-200 Passagiers':
-    filtered_resultaten = resultaten[resultaten['passagiers_categorie'] == '151-200 Passagiers']
+    filtered_resultaten = resultaten[(resultaten['passagiers'] > 150) & (resultaten['passagiers'] <= 200)]
 else:
-    filtered_resultaten = resultaten[resultaten['passagiers_categorie'] == '201+ Passagiers']
+    filtered_resultaten = resultaten[resultaten['passagiers'] > 200]
 
-# Maak de grafieken op basis van de gefilterde resultaten
-st.subheader(f'Geluid per Passagier voor {passagierscategorie}')
+# Maak de grafieken
+st.subheader(f'Grafieken voor {passagierscategorie}')
 
-# Grafiek voor geluid per passagier op basis van de geselecteerde categorie
-plt.figure(figsize=(10, 6))
-sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=filtered_resultaten, palette='viridis')
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
-plt.title(f'Geluid per Passagier per Vliegtuigtype ({passagierscategorie})', fontsize=16)
-plt.xlabel('Vliegtuigtype', fontsize=12)
-plt.ylabel('Geluid per Passagier (dB)', fontsize=12)
-plt.xticks(rotation=45)
+# Geluid per Passagier
+sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=filtered_resultaten, palette='viridis', ax=axes[0])
+axes[0].set_title('Geluid per Passagier per Vliegtuigtype', fontsize=14)
+axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
+axes[0].set_ylabel('Geluid per Passagier (dB)', fontsize=12)
+axes[0].tick_params(axis='x', rotation=45)
+
+# Geluid per Ton Vracht
+sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=filtered_resultaten, palette='viridis', ax=axes[1])
+axes[1].set_title('Geluid per Ton Vracht per Vliegtuigtype', fontsize=14)
+axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
+axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
+axes[1].tick_params(axis='x', rotation=45)
+
+# Pas de lay-out aan voor betere zichtbaarheid
+plt.tight_layout()
 
 # Toon de grafiek in Streamlit
-st.pyplot(plt)
+st.pyplot(fig)
+
 
