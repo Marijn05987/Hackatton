@@ -150,31 +150,57 @@ plt.xticks(rotation=45)
 st.pyplot(plt)
 
 import streamlit as st
-import pandas as pd
-import plotly.express as px
 import requests
-
-# Stel de maximale weergave van rijen in voor debugging
-pd.set_option('display.max_rows', 100000)  # Verhoog het aantal weergegeven rijen
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
 
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
 def fetch_data():
-    start_date = int(pd.to_datetime('2025-01-01').timestamp())
-    end_date = int(pd.to_datetime('2025-03-24').timestamp())
-    response = requests.get(f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B2%5D%5B%5D=21&conditions%5B2%5D%5B2%5D%5B%5D=32&conditions%5B2%5D%5B2%5D%5B%5D=33&conditions%5B2%5D%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags')
-    colnames = pd.DataFrame(response.json()['metadata'])
-    data = pd.DataFrame(response.json()['rows'])
-    data.columns = colnames.headers
-    data['time'] = pd.to_datetime(data['time'], unit='s')
-    return data
+    url = 'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D=1735689600&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D=1742774400&conditions%5B%5D%5B%5D=label&conditions%5B%5D%5B%5D=in&conditions%5B%5D%5B%5D=21&conditions%5B%5D%5B%5D=32&conditions%5B%5D%5B%5D=33&conditions%5B%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Zorgt ervoor dat een HTTP-fout een uitzondering veroorzaakt
+        
+        if response.status_code == 200:
+            colnames = pd.DataFrame(response.json()['metadata'])
+            data = pd.DataFrame(response.json()['rows'])
+            data.columns = colnames.headers
+            data['time'] = pd.to_datetime(data['time'], unit='s')
+            return data
+        else:
+            return None  # Als er een fout is, geef dan geen data terug
+            
+    except requests.exceptions.RequestException:
+        return None  # Als er een netwerkfout of andere fout is, geef dan ook geen data terug
 
 # Haal de dataset op
 data = fetch_data()
 
-# Debugging: Bekijk de meest voorkomende vliegtuigtypen
-st.write("Top 20 meest voorkomende vliegtuigtypen:")
-st.write(data['type'].value_counts().iloc[:20])
+# Controleer of de data correct is geladen
+if data is None or data.empty:
+    st.error("Kon geen data ophalen. Controleer de API of gebruik mockdata.")
+else:
+    # Genereer een lijst van de meest voorkomende vliegtuigtypen
+    top_vliegtuigen = data['type'].value_counts().iloc[:10].reset_index()
+    top_vliegtuigen.columns = ['Vliegtuig Type', 'Aantal']
+
+    # Maak een bar chart van de 10 meest voorkomende vliegtuigtypen
+    fig_top_vliegtuigen = px.bar(
+        top_vliegtuigen,
+        x='Aantal',
+        y='Vliegtuig Type',
+        orientation='h',
+        labels={'Aantal': 'Aantal Vluchten', 'Vliegtuig Type': 'Vliegtuig Type'},
+        title='Top 10 Meest Voorkomende Vliegtuigen'
+    )
+
+    # Toon de grafiek in Streamlit
+    st.plotly_chart(fig_top_vliegtuigen)
 
 # Definieer passagierscategorieën
 def categorize_by_passenger_count(passenger_count):
@@ -194,7 +220,6 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
     'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
     'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
     'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
     'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
@@ -230,6 +255,8 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
     'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
 }
+
+# De rest van de code blijft hetzelfde
 
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
     details['categorie'] = categorize_by_passenger_count(details['passagiers'])
