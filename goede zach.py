@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 import folium
-import math
-from datetime import datetime
-import pytz
 from folium.plugins import AntPath
 from streamlit_folium import folium_static
+from datetime import datetime
+import pytz
+import math
 
 # -------------------------------------------------------------------------
 # 1) READ CSVs WITH STREAMLIT CACHE
@@ -13,9 +13,10 @@ from streamlit_folium import folium_static
 @st.cache_data
 def load_data():
     df = pd.read_csv('flights_today_master.csv')   # Flight data (has the coordinates)
-    sensornet = pd.read_csv('my_data.csv')           # Sensor data (includes 'time', 'callsign', 'type', 'distance', 'lasmax_dB', etc.)
+    sensornet = pd.read_csv('my_data.csv')         # Sensor data (includes 'time', 'callsign', 'type', 'distance', 'lasmax_dB', etc.)
     return df, sensornet
 
+# Load data
 df, sensornet = load_data()
 
 # Schiphol coordinates
@@ -148,173 +149,78 @@ def plot_flight(df, flight_number, map_obj, color):
 # -------------------------------------------------------------------------
 # 5) BUILD THE BASE MAP
 # -------------------------------------------------------------------------
-m = folium.Map(location=[52.235, 4.748], zoom_start=11.5)
+def create_map():
+    m = folium.Map(location=[52.235, 4.748], zoom_start=11.5)
 
-# 20 km circle around Schiphol
-folium.Circle(
-    location=[SCHIPHOL_LAT, SCHIPHOL_LON],
-    radius=20000,
-    color='lightgray',
-    fill=True,
-    fill_color='black',
-    fill_opacity=0
-).add_to(m)
-
-# -------------------------------------------------------------------------
-# 6) DEFINE FLIGHTS + COLORS, PLOT THEIR PATHS
-# -------------------------------------------------------------------------
-flight_numbers = ["KLM1342", "PGT1259"]
-colors = ["blue", "red"]
-for fn, col in zip(flight_numbers, colors):
-    sub_df = df[df['FlightNumber'] == fn].copy()
-    plot_flight(sub_df, fn, m, col)
-
-# -------------------------------------------------------------------------
-# 7) ADD STATIONARY SENSORS (including Kudelstaartseweg)
-# -------------------------------------------------------------------------
-sensors = [
-    ("Kudelstaartseweg", 52.235, 4.748)
-]
-
-for i, (name, lat, lon) in enumerate(sensors):
-    # For Kudelstaartseweg, use the PNG marker
-    if name == "Kudelstaartseweg":
-        folium.Marker(
-            location=[lat, lon],
-            icon=folium.CustomIcon(
-                icon_image='/Users/zacharywoud/Desktop/Leerjaar 3 Bedrijfskunde- DataScience Minor/Hackaton/sound-sensor2.png', 
-                icon_size=(50, 50)
-            ),
-            popup=f"Sensor: {name}"
-        ).add_to(m)
-    else:
-        color = "darkorange"
-        marker_html = f"""
-        <div style="border-radius: 50%; background-color: {color};
-                    width: 30px; height: 30px;
-                    display: flex; align-items: center; justify-content: center;">
-            <span style="font-weight: bold; color: black;">{name[:2]}</span>
-        </div>
-        """
-        folium.Marker(
-            location=[lat, lon],
-            icon=folium.DivIcon(
-                icon_size=(30,30),
-                icon_anchor=(15,15),
-                html=marker_html
-            ),
-            popup=f"Sensor: {name}"
-        ).add_to(m)
-
-# -------------------------------------------------------------------------
-# 8) CREATE MARKERS FOR EACH FLIGHT AT CLOSEST-TIME MATCH,
-#    OFFSET THEM, AND DRAW DASHED LINE.
-#    MARKER COLOR MATCHES THE FLIGHT PATH, DISPLAYS lasmax_dB INSIDE THE ICON,
-#    AND THE POPUP SHOWS SENSOR DATA: time, type, distance (m), and callsign.
-# -------------------------------------------------------------------------
-def add_closest_time_marker(flight, color, df, sensornet, folium_map, offset_lat=0.0, offset_lon=0.0):
-    """
-    For a given flight, find the sensor time in sensornet for that callsign,
-    locate the closest flight-time row in df, place a marker at an offset location,
-    and draw a dashed line from that offset to the real lat/lon.
+    # 20 km circle around Schiphol
+    folium.Circle(
+        location=[SCHIPHOL_LAT, SCHIPHOL_LON],
+        radius=20000,
+        color='lightgray',
+        fill=True,
+        fill_color='black',
+        fill_opacity=0
+    ).add_to(m)
     
-    The marker icon shows the 'lasmax_dB' (rounded, with "dB").
-    The popup displays sensor data (from the selected row) with keys in bold:
-      - Time, Type, Distance (m), Callsign.
-    """
-    sensor_rows = sensornet[sensornet['callsign'] == flight].copy()
-    if sensor_rows.empty:
-        return
+    return m
 
-    sensor_row = sensor_rows.iloc[0]
-    sensor_time_str = sensor_row['time']     # "HH:MM:SS"
-    sensor_time_sec = time_str_to_seconds(sensor_time_str)
-    lasmax_value = sensor_row.get('lasmax_dB', None)
-    sensor_type = sensor_row.get('type', 'N/A')
-    sensor_distance = sensor_row.get('distance', 'N/A')
-    sensor_callsign = sensor_row.get('callsign', 'N/A')
+# -------------------------------------------------------------------------
+# 6) ADD FLIGHT AND SENSOR MARKERS
+# -------------------------------------------------------------------------
+def add_flights_and_sensors(m, flight_numbers, colors):
+    # Plot flight paths
+    for fn, col in zip(flight_numbers, colors):
+        sub_df = df[df['FlightNumber'] == fn].copy()
+        plot_flight(sub_df, fn, m, col)
     
-    flight_rows = df[df['FlightNumber'] == flight].copy()
-    if flight_rows.empty:
-        return
+    # Add stationary sensors
+    sensors = [
+        ("Kudelstaartseweg", 52.235, 4.748)
+    ]
 
-    flight_rows['time_sec'] = flight_rows['Time'].apply(time_str_to_seconds)
-    flight_rows['diff'] = (flight_rows['time_sec'] - sensor_time_sec).abs()
-    idx_closest = flight_rows['diff'].idxmin()
+    for i, (name, lat, lon) in enumerate(sensors):
+        # For Kudelstaartseweg, use the PNG marker
+        if name == "Kudelstaartseweg":
+            folium.Marker(
+                location=[lat, lon],
+                icon=folium.CustomIcon(
+                    icon_image='/path/to/your/sound-sensor2.png',  # Update this path
+                    icon_size=(50, 50)
+                ),
+                popup=f"Sensor: {name}"
+            ).add_to(m)
+        else:
+            color = "darkorange"
+            marker_html = f"""
+            <div style="border-radius: 50%; background-color: {color};
+                        width: 30px; height: 30px;
+                        display: flex; align-items: center; justify-content: center;">
+                <span style="font-weight: bold; color: black;">{name[:2]}</span>
+            </div>
+            """
+            folium.Marker(
+                location=[lat, lon],
+                icon=folium.DivIcon(
+                    icon_size=(30,30),
+                    icon_anchor=(15,15),
+                    html=marker_html
+                ),
+                popup=f"Sensor: {name}"
+            ).add_to(m)
+
+# -------------------------------------------------------------------------
+# 7) DISPLAY THE MAP IN STREAMLIT
+# -------------------------------------------------------------------------
+def display_map():
+    m = create_map()
     
-    lat_real = flight_rows.loc[idx_closest, 'Latitude']
-    lon_real = flight_rows.loc[idx_closest, 'Longitude']
-    flight_time_str = flight_rows.loc[idx_closest, 'Time']  # "HH:MM:SS"
-
-    lat_marker = lat_real + offset_lat
-    lon_marker = lon_real + offset_lon
-
-    if pd.notnull(lasmax_value):
-        lasmax_rounded = int(round(lasmax_value))
-    else:
-        lasmax_rounded = "N/A"
-
-    marker_html = f"""
-    <div style="border-radius: 50%; background-color: {color};
-                width: 40px; height: 40px;
-                display: flex; align-items: center; justify-content: center;
-                font-weight: bold; color: white;">
-        {lasmax_rounded} dB
-    </div>
-    """
-
-    popup_text = (
-        f"<b>Flight:</b> {flight}<br>"
-        f"<b>Time:</b> {sensor_time_str} UTC<br>"
-        f"<b>Type:</b> {sensor_type}<br>"
-        f"<b>Distance:</b> {sensor_distance} m<br>"
-    )
+    flight_numbers = ["KLM1342", "PGT1259"]
+    colors = ["blue", "red"]
     
-    folium.Marker(
-        location=[lat_marker, lon_marker],
-        icon=folium.DivIcon(
-            icon_size=(40,40),
-            icon_anchor=(20,20),
-            html=marker_html
-        ),
-        popup=popup_text
-    ).add_to(folium_map)
+    add_flights_and_sensors(m, flight_numbers, colors)
+    
+    folium_static(m)
 
-    folium.PolyLine(
-        locations=[(lat_marker, lon_marker), (lat_real, lon_real)],
-        weight=2,
-        color=color,
-        dash_array='5,5'
-    ).add_to(folium_map)
-
-# Offsets dictionary (adjust as needed for more flights)
-offsets = {
-    "KLM1342": (0.0025, 0.0075),   # shift ~30m north
-    "PGT1259": (0.0025, -0.0075)   # shift ~30m south
-}
-
-for (fn, col) in zip(flight_numbers, colors):
-    off_lat, off_lon = offsets.get(fn, (0.0, 0.0))
-    add_closest_time_marker(fn, col, df, sensornet, m, offset_lat=off_lat, offset_lon=off_lon)
-
-# -------------------------------------------------------------------------
-# 9) ADD A LEGEND TO THE MAP
-# -------------------------------------------------------------------------
-legend_html = '''
-     <div style="position: fixed; 
-                 bottom: 50px; left: 50px; width: 150px; height: 90px; 
-                 border:2px solid grey; z-index:9999; font-size:14px;
-                 background-color:white;
-                 opacity: 0.8;
-                 padding: 10px;">
-     <b>Flight Legend</b><br>
-     <i style="color:blue;">&#9632;</i>&nbsp;KLM1342<br>
-     <i style="color:red;">&#9632;</i>&nbsp;PGT1259
-     </div>
-     '''
-m.get_root().html.add_child(folium.Element(legend_html))
-
-# -------------------------------------------------------------------------
-# 10) DISPLAY THE MAP IN STREAMLIT
-# -------------------------------------------------------------------------
-folium_static(m)
+# Display the map in Streamlit
+if __name__ == "__main__":
+    display_map()
