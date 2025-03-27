@@ -300,6 +300,14 @@ st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")
 
 # Boxplot: Spreiding van geluid per passagierscategorie
 st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
+
+# Sorteer de categorieën op de x-as van laag naar hoog
+average_decibels_by_aircraft['categorie'] = pd.Categorical(
+    average_decibels_by_aircraft['categorie'],
+    categories=['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers'],
+    ordered=True
+)
+
 fig_box_plot = px.box(
     average_decibels_by_aircraft,
     x='categorie',
