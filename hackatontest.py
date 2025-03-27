@@ -149,14 +149,11 @@ plt.xticks(rotation=45)
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import streamlit as st
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import random
 
 # Define the aircraft capacity dictionary
 vliegtuig_capaciteit_passagiersaantal = {
@@ -200,15 +197,14 @@ def categorize_by_passenger_count(passenger_count):
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
     details['categorie'] = categorize_by_passenger_count(details['passagiers'])
 
-# Mock dataset (replace this with your actual dataset)
-data = pd.DataFrame({
-    'type': ['Boeing 737-800', 'Embraer ERJ 170-200 STD', 'Airbus A320 214', 'Boeing 777-300ER', 'Boeing 737-900'],
-    'SEL_dB': [85, 90, 95, 100, 92]
-})
+# Create a dataset with all aircraft from vliegtuig_capaciteit_passagiersaantal
+data = pd.DataFrame([
+    {'type': aircraft, 'SEL_dB': random.uniform(75, 100)}  # Assign random SEL_dB values for demonstration
+    for aircraft in vliegtuig_capaciteit_passagiersaantal.keys()
+])
 
 # Merge the passenger categories into the dataset
-filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
-filtered_data['categorie'] = filtered_data['type'].map(
+data['categorie'] = data['type'].map(
     lambda x: categorize_by_passenger_count(vliegtuig_capaciteit_passagiersaantal[x]['passagiers'])
 )
 
@@ -217,7 +213,7 @@ categories = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '2
 selected_category = st.selectbox('Selecteer een passagierscategorie:', categories)
 
 # Filter the data based on the selected category
-category_data = filtered_data[filtered_data['categorie'] == selected_category]
+category_data = data[data['categorie'] == selected_category]
 
 # Group by aircraft type and calculate the average SEL_dB
 average_decibels_by_aircraft = category_data.groupby('type')['SEL_dB'].mean().reset_index()
