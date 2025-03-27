@@ -148,24 +148,18 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
-
 import streamlit as st
-import requests
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import plotly.express as px
+import requests
 
-# Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
+# Cache the data-fetching function to avoid unnecessary API calls
 @st.cache_data
 def fetch_data():
     url = 'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D=1735689600&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D=1742774400&conditions%5B%5D%5B%5D=label&conditions%5B%5D%5B%5D=in&conditions%5B%5D%5B%5D=21&conditions%5B%5D%5B%5D=32&conditions%5B%5D%5B%5D=33&conditions%5B%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags'
-    
     try:
         response = requests.get(url)
-        response.raise_for_status()  # Zorgt ervoor dat een HTTP-fout een uitzondering veroorzaakt
-        
+        response.raise_for_status()  # Raise an exception for HTTP errors
         if response.status_code == 200:
             colnames = pd.DataFrame(response.json()['metadata'])
             data = pd.DataFrame(response.json()['rows'])
@@ -173,23 +167,22 @@ def fetch_data():
             data['time'] = pd.to_datetime(data['time'], unit='s')
             return data
         else:
-            return None  # Als er een fout is, geef dan geen data terug
-            
+            return None
     except requests.exceptions.RequestException:
-        return None  # Als er een netwerkfout of andere fout is, geef dan ook geen data terug
+        return None
 
-# Haal de dataset op
+# Fetch the dataset
 data = fetch_data()
 
-# Controleer of de data correct is geladen
+# Check if data is valid
 if data is None or data.empty:
-    st.error("Kon geen data ophalen. Controleer de API of gebruik mockdata.")
+    st.error("Could not fetch data from the API. Please check the API or use mock data.")
 else:
-    # Genereer een lijst van de meest voorkomende vliegtuigtypen
+    # Generate a list of the most common aircraft types
     top_vliegtuigen = data['type'].value_counts().iloc[:10].reset_index()
     top_vliegtuigen.columns = ['Vliegtuig Type', 'Aantal']
 
-    # Maak een bar chart van de 10 meest voorkomende vliegtuigtypen
+    # Create a bar chart for the 10 most common aircraft types
     fig_top_vliegtuigen = px.bar(
         top_vliegtuigen,
         x='Aantal',
@@ -199,62 +192,67 @@ else:
         title='Top 10 Meest Voorkomende Vliegtuigen'
     )
 
-    # Toon de grafiek in Streamlit
+    # Display the bar chart in Streamlit
     st.plotly_chart(fig_top_vliegtuigen)
 
-# Definieer passagierscategorieën
-def categorize_by_passenger_count(passenger_count):
-    if passenger_count <= 100:
-        return '0-100 Passagiers'
-    elif 101 <= passenger_count <= 150:
-        return '101-150 Passagiers'
-    elif 151 <= passenger_count <= 200:
-        return '151-200 Passagiers'
-    elif 201 <= passenger_count <= 300:
-        return '201-300 Passagiers'
-    else:
-        return '301+ Passagiers'
+    # Define passenger categories
+    def categorize_by_passenger_count(passenger_count):
+        if passenger_count <= 100:
+            return '0-100 Passagiers'
+        elif 101 <= passenger_count <= 150:
+            return '101-150 Passagiers'
+        elif 151 <= passenger_count <= 200:
+            return '151-200 Passagiers'
+        elif 201 <= passenger_count <= 300:
+            return '201-300 Passagiers'
+        else:
+            return '301+ Passagiers'
 
-# Voeg passagierscategorieën toe aan vliegtuig_capaciteit_passagiersaantal
-vliegtuig_capaciteit_passagiersaantal = {
-    'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
-    'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
-    'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
-    'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
-    'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
-    'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
-    'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
-    'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
-    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
-    'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
-    'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
-    'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
-    'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
-    'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30},
-    'Airbus A380 861': {'passagiers': 555, 'vracht_ton': 80},  # Aantal passagiers kan variëren afhankelijk van de configuratie
-    'Embraer ERJ190-100LR': {'passagiers': 98, 'vracht_ton': 8},
-    'Airbus A320 232': {'passagiers': 180, 'vracht_ton': 20},
-    'Embraer EMB-170 STD': {'passagiers': 70, 'vracht_ton': 7},
-    'Airbus A320-271N': {'passagiers': 180, 'vracht_ton': 20},
-    'Embraer EMB-195 LR': {'passagiers': 120, 'vracht_ton': 10},
-    'Airbus A320-251N': {'passagiers': 180, 'vracht_ton': 20},
-    'Boeing 737NG 958ER/W': {'passagiers': 160, 'vracht_ton': 20},
-    'Airbus A300 B4-622RF': {'passagiers': 266, 'vracht_ton': 40},
-    'Airbus A320 216': {'passagiers': 150, 'vracht_ton': 20},
-    'Airbus A330 323E': {'passagiers': 277, 'vracht_ton': 40},
-    'Airbus A319 112': {'passagiers': 156, 'vracht_ton': 20},
-    'Airbus A350 941': {'passagiers': 315, 'vracht_ton': 60},
-    'Airbus A330 302': {'passagiers': 277, 'vracht_ton': 40},
-    'Airbus A319 131': {'passagiers': 156, 'vracht_ton': 20},
-    'Boeing 787-8 Dreamliner': {'passagiers': 242, 'vracht_ton': 20},
-    'Airbus A330 323X': {'passagiers': 277, 'vracht_ton': 40},
-    'Boeing 737NG 8AS/W': {'passagiers': 160, 'vracht_ton': 20},
-    'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
-    'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
-}
+    # Add passenger categories to the aircraft capacity dictionary
+    vliegtuig_capaciteit_passagiersaantal = {
+        'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
+        'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
+        'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
+        'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
+        'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
+        'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
+        'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
+        'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
+        'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
+        'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
+        'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
+        'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
+        'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
+        'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
+        'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
+        'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
+        'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30},
+        'Airbus A380 861': {'passagiers': 555, 'vracht_ton': 80},
+        'Embraer ERJ190-100LR': {'passagiers': 98, 'vracht_ton': 8},
+        'Airbus A320 232': {'passagiers': 180, 'vracht_ton': 20},
+        'Embraer EMB-170 STD': {'passagiers': 70, 'vracht_ton': 7},
+        'Airbus A320-271N': {'passagiers': 180, 'vracht_ton': 20},
+        'Embraer EMB-195 LR': {'passagiers': 120, 'vracht_ton': 10},
+        'Airbus A320-251N': {'passagiers': 180, 'vracht_ton': 20},
+        'Boeing 737NG 958ER/W': {'passagiers': 160, 'vracht_ton': 20},
+        'Airbus A300 B4-622RF': {'passagiers': 266, 'vracht_ton': 40},
+        'Airbus A320 216': {'passagiers': 150, 'vracht_ton': 20},
+        'Airbus A330 323E': {'passagiers': 277, 'vracht_ton': 40},
+        'Airbus A319 112': {'passagiers': 156, 'vracht_ton': 20},
+        'Airbus A350 941': {'passagiers': 315, 'vracht_ton': 60},
+        'Airbus A330 302': {'passagiers': 277, 'vracht_ton': 40},
+        'Airbus A319 131': {'passagiers': 156, 'vracht_ton': 20},
+        'Boeing 787-8 Dreamliner': {'passagiers': 242, 'vracht_ton': 20},
+        'Airbus A330 323X': {'passagiers': 277, 'vracht_ton': 40},
+        'Boeing 737NG 8AS/W': {'passagiers': 160, 'vracht_ton': 20},
+        'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
+        'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
+    }
+
+    for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
+        details['categorie'] = categorize_by_passenger_count(details['passagiers'])
+
+    # The rest of the code remains unchanged
 
 # De rest van de code blijft hetzelfde
 
