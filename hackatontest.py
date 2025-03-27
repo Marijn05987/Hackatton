@@ -302,7 +302,7 @@ st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")
 st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
 fig_box_plot = px.box(
     average_decibels_by_aircraft,
-    x='categories',
+    x='categorie',
     y='Gemiddeld_SEL_dB',
     color='categorie',
     labels={'categorie': 'Passagierscategorie', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
