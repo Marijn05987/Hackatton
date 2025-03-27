@@ -97,7 +97,7 @@ resultaten_sorted_passagier = resultaten.sort_values(by='geluid_per_passagier')
 resultaten_sorted_vracht = resultaten.sort_values(by='geluid_per_vracht')
 
 # Maak de grafieken
-st.subheader('Grafieken')
+st.subheader('Grafieken --- Top 10 meest gebruikte vliegtuigen')
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
