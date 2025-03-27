@@ -238,21 +238,23 @@ else:
     # Filter de data op basis van de geselecteerde categorie
     category_data = average_decibels_by_aircraft[average_decibels_by_aircraft['categorie'] == selected_category]
 
-    # Sorteer de data op passagiersaantal
-    category_data = category_data.sort_values(by='Passagiers', ascending=True)
+# Sorteer de data op passagiersaantal
+category_data = category_data.sort_values(by='Passagiers', ascending=True)
 
-    # Maak een interactieve grafiek met Plotly
-    fig = px.bar(
-        category_data,
-        x='Gemiddeld_SEL_dB',
-        y='type',
-        plt.xlim(50,105),
-        orientation='h',
-        color='Passagiers',
-        labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
-        title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
-        hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
-    )
+# Maak een interactieve grafiek met Plotly
+fig = px.bar(
+    category_data,
+    x='Gemiddeld_SEL_dB',
+    y='type',
+    orientation='h',
+    color='Passagiers',
+    labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
+    title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
+    hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
+)
 
-    # Toon de interactieve grafiek in Streamlit
-    st.plotly_chart(fig)
+# Stel de x-aslimieten in
+fig.update_layout(xaxis=dict(range=[50, 105]))
+
+# Toon de interactieve grafiek in Streamlit
+st.plotly_chart(fig)
