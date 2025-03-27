@@ -81,7 +81,7 @@ load_factor = 0.85
 
 # Streamlit UI
 st.title('Geluid per Passagier en Vracht per Vliegtuigtype')
-st.markdown('Deze applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart.')
+st.markdown('Deze applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart. Hieronder zijn de grafieken van de top 10 meest gebruikte vliegtuigen')
 
 # Haal de gegevens op van de API of gebruik mockdata
 data = fetch_data()
