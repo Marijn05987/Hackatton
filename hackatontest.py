@@ -37,126 +37,30 @@ def get_mock_data():
     })
     return data
 
-# Cache de berekeningen van geluid per passagier en vracht
-@st.cache_data
-def bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor):
-    results = []
+# Groeperen op passagiers aantal en vergelijken
+st.subheader('Vergelijking van Vliegtuigen op Basis van Passagiersaantal')
 
-    for _, row in data.iterrows():
-        vliegtuig_type = row['vliegtuig_type']
-        if vliegtuig_type in vliegtuig_capaciteit:
-            sel_dB = row['SEL_dB']
-            passagiers = vliegtuig_capaciteit[vliegtuig_type]['passagiers']
-            vracht_ton = vliegtuig_capaciteit[vliegtuig_type]['vracht_ton']
-            
-            passagiers_bezet = passagiers * load_factor
-            geluid_per_passagier = sel_dB / passagiers_bezet if passagiers_bezet != 0 else np.nan
-            geluid_per_vracht = sel_dB / vracht_ton if vracht_ton != 0 else np.nan
-            
-            results.append({
-                'vliegtuig_type': vliegtuig_type,
-                'passagiers': passagiers,
-                'geluid_per_passagier': geluid_per_passagier,
-                'geluid_per_vracht': geluid_per_vracht
-            })
+# Categoriseer vliegtuigen op basis van passagiers
+def categorize_by_passenger(passenger_count):
+    if passenger_count <= 100:
+        return '0-100 Passagiers'
+    elif passenger_count <= 150:
+        return '101-150 Passagiers'
+    elif passenger_count <= 200:
+        return '151-200 Passagiers'
+    else:
+        return '201+ Passagiers'
 
-    return pd.DataFrame(results)
+resultaten['passagiers_categorie'] = resultaten['passagiers'].apply(categorize_by_passenger)
 
-# Stel vliegtuigcapaciteit in
-vliegtuig_capaciteit = {
-    'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
-    'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
-    'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
-    'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
-    'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
-    'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
-    'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
-    'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
-    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
-    'Canadair CL-600-2B19 CRJ-200LR': {'passagiers': 50, 'vracht_ton': 4},
-    'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus A319 111': {'passagiers': 156, 'vracht_ton': 16},
-    'Airbus A320-214SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
-    'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
-    'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
-    'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
-    'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30}
-}
+# Maak de grafiek voor de categorisatie
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='passagiers_categorie', y='geluid_per_passagier', data=resultaten, palette='Set2')
 
-# Stel de load factor in (85% van de capaciteit)
-load_factor = 0.85
+plt.title('Vergelijking van Geluid per Passagier per Passagierscategorie', fontsize=16)
+plt.xlabel('Passagierscategorie', fontsize=12)
+plt.ylabel('Geluid per Passagier (dB)', fontsize=12)
+plt.xticks(rotation=45)
 
-# Streamlit UI
-st.title('Geluid per Passagier en Vracht per Vliegtuigtype')
-st.markdown('Dit applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart.')
-
-# Haal de gegevens op van de API of gebruik mockdata
-data = fetch_data()
-
-if data is None:
-    data = get_mock_data()  # Gebruik mockdata als de API niet werkt
-
-# Voer de berekeningen uit
-resultaten = bereken_geluid_per_passagier_en_vracht(data, vliegtuig_capaciteit, load_factor)
-
-# Tabs voor verschillende grafieken
-tab1, tab2 = st.tabs(["Geluid per Passagier/Vracht", "Gemiddeld Geluid per Categorie"])
-
-with tab1:
-    st.subheader('Grafieken')
-
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-
-    # Geluid per Passagier
-    sns.barplot(x='vliegtuig_type', y='geluid_per_passagier', data=resultaten, palette='viridis', ax=axes[0])
-    axes[0].set_title('Geluid per Passagier per Vliegtuigtype (Met Load Factor)', fontsize=14)
-    axes[0].set_xlabel('Vliegtuigtype', fontsize=12)
-    axes[0].set_ylabel('Geluid per Passagier (dB)', fontsize=12)
-    axes[0].tick_params(axis='x', rotation=45)
-
-    # Geluid per Ton Vracht
-    sns.barplot(x='vliegtuig_type', y='geluid_per_vracht', data=resultaten, palette='viridis', ax=axes[1])
-    axes[1].set_title('Geluid per Ton Vracht per Vliegtuigtype (Zonder Load Factor bij Vracht)', fontsize=14)
-    axes[1].set_xlabel('Vliegtuigtype', fontsize=12)
-    axes[1].set_ylabel('Geluid per Ton Vracht (dB)', fontsize=12)
-    axes[1].tick_params(axis='x', rotation=45)
-
-    # Pas de lay-out aan voor betere zichtbaarheid
-    plt.tight_layout()
-
-    # Toon de grafiek in Streamlit
-    st.pyplot(fig)
-
-with tab2:
-    st.subheader('Gemiddeld Geluid per Passagierscategorie')
-
-    # Categoriseer vliegtuigen op basis van passagiers
-    def categorize_by_passenger(passenger_count):
-        if passenger_count <= 100:
-            return '0-100 Passagiers'
-        elif passenger_count <= 150:
-            return '101-150 Passagiers'
-        elif passenger_count <= 200:
-            return '151-200 Passagiers'
-        else:
-            return '201+ Passagiers'
-
-    resultaten['passagiers_categorie'] = resultaten['passagiers'].apply(categorize_by_passenger)
-
-    # Bereken het gemiddelde geluid per categorie
-    gemiddelde_geluid = resultaten.groupby('passagiers_categorie')['geluid_per_passagier'].mean().reset_index()
-
-    # Maak de grafiek
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x='passagiers_categorie', y='geluid_per_passagier', data=gemiddelde_geluid, palette='Set2')
-    plt.title('Gemiddeld Geluid per Passagierscategorie', fontsize=16)
-    plt.xlabel('Passagierscategorie', fontsize=12)
-    plt.ylabel('Gemiddeld Geluid per Passagier (dB)', fontsize=12)
-    plt.xticks(rotation=45)
-
-    # Toon de grafiek in Streamlit
-    st.pyplot(plt)
+# Toon de grafiek in Streamlit
+st.pyplot(plt)
