@@ -284,10 +284,11 @@ else:
 
     # Toon de interactieve grafiek in Streamlit
     st.plotly_chart(fig)
-# Bestaande code blijft ongewijzigd...
+
 
 # Toon de interactieve bar chart
-fig_bar = px.bar(
+st.subheader("Bar Chart: Gemiddeld Geluid per Passagierscategorie")
+fig_bar_chart = px.bar(
     category_data,
     x='Gemiddeld_SEL_dB',
     y='type',
@@ -297,15 +298,12 @@ fig_bar = px.bar(
     title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
     hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
 )
-fig_bar.update_layout(xaxis=dict(range=[70, 85]))
-st.plotly_chart(fig_bar)  # Gebruik een unieke variabele
-
-# Toegevoegde grafieken
-st.subheader("Extra Visualisaties")
+fig_bar_chart.update_layout(xaxis=dict(range=[70, 85]))
+st.plotly_chart(fig_bar_chart, use_container_width=True)  # Unieke variabele
 
 # Scatterplot: Correlatie tussen passagiers en gemiddeld geluid
 st.subheader("Scatterplot: Correlatie tussen Passagiers en Geluid")
-fig_scatter = px.scatter(
+fig_scatter_plot = px.scatter(
     average_decibels_by_aircraft,
     x='Passagiers',
     y='Gemiddeld_SEL_dB',
@@ -314,11 +312,11 @@ fig_scatter = px.scatter(
     title='Correlatie tussen Geluid en Aantal Passagiers',
     hover_data=['type']
 )
-st.plotly_chart(fig_scatter)  # Gebruik een unieke variabele
+st.plotly_chart(fig_scatter_plot, use_container_width=True)  # Unieke variabele
 
 # Boxplot: Spreiding van geluid per passagierscategorie
 st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
-fig_box = px.box(
+fig_box_plot = px.box(
     average_decibels_by_aircraft,
     x='categorie',
     y='Gemiddeld_SEL_dB',
@@ -326,24 +324,24 @@ fig_box = px.box(
     labels={'categorie': 'Passagierscategorie', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Spreiding van Geluid per Passagierscategorie'
 )
-st.plotly_chart(fig_box)  # Gebruik een unieke variabele
+st.plotly_chart(fig_box_plot, use_container_width=True)  # Unieke variabele
 
 # Heatmap: Correlaties tussen numerieke variabelen
 st.subheader("Heatmap: Correlaties tussen Variabelen")
 corr_matrix = filtered_data[['SEL_dB', 'passagiers']].corr()
-fig_heatmap, ax = plt.subplots()
-sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', ax=ax)
-st.pyplot(fig_heatmap)  # Gebruik een unieke variabele
+fig_heatmap, ax_heatmap = plt.subplots()
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', ax=ax_heatmap)
+st.pyplot(fig_heatmap)  # Unieke variabele
 
 # Line Chart: Tijdreeksanalyse van gemiddeld geluid
 st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
 filtered_data['date'] = filtered_data['time'].dt.date
 time_series = filtered_data.groupby('date').agg(Gemiddeld_SEL_dB=('SEL_dB', 'mean')).reset_index()
-fig_line = px.line(
+fig_line_chart = px.line(
     time_series,
     x='date',
     y='Gemiddeld_SEL_dB',
     labels={'date': 'Datum', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Tijdreeksanalyse van Gemiddeld Geluid'
 )
-st.plotly_chart(fig_line)  # Gebruik een unieke variabele
+st.plotly_chart(fig_line_chart, use_container_width=True)  # Unieke variabele
