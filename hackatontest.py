@@ -298,16 +298,21 @@ fig_scatter_plot = px.scatter(
 )
 st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")
 
-# Boxplot: Spreiding van geluid per passagierscategorie
+# Stel de gewenste volgorde van de categorieën in
+category_order = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers']
+
 st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
+
 fig_box_plot = px.box(
     average_decibels_by_aircraft,
     x='categorie',
     y='Gemiddeld_SEL_dB',
     color='categorie',
     labels={'categorie': 'Passagierscategorie', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
-    title='Spreiding van Geluid per Passagierscategorie'
+    title='Spreiding van Geluid per Passagierscategorie',
+    category_orders={'categorie': category_order}  # Hier stel je de volgorde van de categorieën in
 )
+
 st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
 
 # Line Chart: Tijdreeksanalyse van gemiddeld geluid
