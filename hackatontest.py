@@ -148,3 +148,58 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import streamlit as st
+
+# Define passenger categories
+def categorize_by_passenger_count(passenger_count):
+    if passenger_count <= 100:
+        return '0-100 Passagiers'
+    elif 101 <= passenger_count <= 150:
+        return '101-150 Passagiers'
+    elif 151 <= passenger_count <= 200:
+        return '151-200 Passagiers'
+    elif 201 <= passenger_count <= 300:
+        return '201-300 Passagiers'
+    else:
+        return '301+ Passagiers'
+
+# Add passenger categories to the vliegtuig_capaciteit_passagiersaantal dictionary
+for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
+    details['categorie'] = categorize_by_passenger_count(details['passagiers'])
+
+# Merge the passenger categories into the dataset
+filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
+filtered_data['categorie'] = filtered_data['type'].map(
+    lambda x: categorize_by_passenger_count(vliegtuig_capaciteit_passagiersaantal[x]['passagiers'])
+)
+
+# Create a dropdown menu for passenger categories
+categories = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers']
+selected_category = st.selectbox('Selecteer een passagierscategorie:', categories)
+
+# Filter the data based on the selected category
+category_data = filtered_data[filtered_data['categorie'] == selected_category]
+
+# Group by aircraft type and calculate the average SEL_dB
+average_decibels_by_aircraft = category_data.groupby('type')['SEL_dB'].mean().reset_index()
+
+# Rename columns for clarity
+average_decibels_by_aircraft.columns = ['Vliegtuig Type', 'Gemiddeld SEL_dB']
+
+# Sort the data by average decibels for better visualization
+average_decibels_by_aircraft = average_decibels_by_aircraft.sort_values(by='Gemiddeld SEL_dB', ascending=False)
+
+# Plot the data
+plt.figure(figsize=(12, 6))
+sns.barplot(x='Gemiddeld SEL_dB', y='Vliegtuig Type', data=average_decibels_by_aircraft, palette='viridis')
+plt.title(f'Gemiddeld Geluid (SEL_dB) voor {selected_category}', fontsize=16)
+plt.xlabel('Gemiddeld SEL_dB', fontsize=12)
+plt.ylabel('Vliegtuig Type', fontsize=12)
+plt.tight_layout()
+
+# Show the plot
+st.pyplot(plt)
