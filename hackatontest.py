@@ -148,11 +148,9 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
-
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
 import random
 
 # Define the aircraft capacity dictionary
@@ -199,8 +197,12 @@ for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
 
 # Create a dataset with all aircraft from vliegtuig_capaciteit_passagiersaantal
 data = pd.DataFrame([
-    {'type': aircraft, 'SEL_dB': random.uniform(75, 100)}  # Assign random SEL_dB values for demonstration
-    for aircraft in vliegtuig_capaciteit_passagiersaantal.keys()
+    {
+        'type': aircraft,
+        'SEL_dB': random.uniform(75, 100),  # Assign random SEL_dB values for demonstration
+        'passagiers': details['passagiers']
+    }
+    for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items()
 ])
 
 # Merge the passenger categories into the dataset
@@ -215,24 +217,20 @@ selected_category = st.selectbox('Selecteer een passagierscategorie:', categorie
 # Filter the data based on the selected category
 category_data = data[data['categorie'] == selected_category]
 
-# Group by aircraft type and calculate the average SEL_dB
-average_decibels_by_aircraft = category_data.groupby('type')['SEL_dB'].mean().reset_index()
+# Create an interactive bar chart using Plotly
+fig = px.bar(
+    category_data,
+    x='SEL_dB',
+    y='type',
+    orientation='h',
+    color='passagiers',
+    labels={'type': 'Vliegtuig Type', 'SEL_dB': 'Gemiddeld SEL_dB', 'passagiers': 'Aantal Passagiers'},
+    title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
+    hover_data=['SEL_dB', 'passagiers']
+)
 
-# Rename columns for clarity
-average_decibels_by_aircraft.columns = ['Vliegtuig Type', 'Gemiddeld SEL_dB']
+# Update the layout to set the x-axis range
+fig.update_layout(xaxis=dict(range=[50, 100]))
 
-# Sort the data by average decibels for better visualization
-average_decibels_by_aircraft = average_decibels_by_aircraft.sort_values(by='Gemiddeld SEL_dB', ascending=False)
-
-# Plot the data
-st.subheader(f'Gemiddeld Geluid (SEL_dB) voor {selected_category}')
-plt.figure(figsize=(12, 6))
-sns.barplot(x='Gemiddeld SEL_dB', y='Vliegtuig Type', data=average_decibels_by_aircraft, palette='viridis')
-plt.title(f'Gemiddeld Geluid (SEL_dB) voor {selected_category}', fontsize=16)
-plt.xlim(50,105)
-plt.xlabel('Gemiddeld SEL_dB', fontsize=12)
-plt.ylabel('Vliegtuig Type', fontsize=12)
-plt.tight_layout()
-
-# Show the plot
-st.pyplot(plt)
+# Show the interactive plot in Streamlit
+st.plotly_chart(fig)
