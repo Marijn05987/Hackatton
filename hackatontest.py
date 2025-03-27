@@ -298,6 +298,8 @@ fig_scatter_plot = px.scatter(
 )
 st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")
 
+
+
 # Stel de gewenste volgorde van de categorieën in
 category_order = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers']
 
@@ -314,6 +316,8 @@ fig_box_plot = px.box(
 )
 
 st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
+
+
 
 # Line Chart: Tijdreeksanalyse van gemiddeld geluid
 st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
