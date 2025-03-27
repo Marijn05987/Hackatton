@@ -321,6 +321,7 @@ fig_box_plot = px.box(
 # Toon de boxplot
 st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
 
+
 fig_box_plot = px.box(
     average_decibels_by_aircraft,
     x='categorie',
