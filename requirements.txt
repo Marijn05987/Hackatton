@@ -4,3 +4,9 @@ numpy
 matplotlib
 seaborn
 plotly
+streamlit
+pandas
+folium
+datetime
+pytz
+streamlit_folium
