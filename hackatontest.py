@@ -307,6 +307,16 @@ average_decibels_by_aircraft['categorie'] = pd.Categorical(
     ordered=True  # Zorg ervoor dat de volgorde wordt gerespecteerd
 )
 
+# Boxplot: Spreiding van geluid per passagierscategorie
+st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
+
+# Zorg ervoor dat de categorieën in de juiste volgorde staan
+average_decibels_by_aircraft['categorie'] = pd.Categorical(
+    average_decibels_by_aircraft['categorie'],
+    categories=['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers'],
+    ordered=True  # Zorg ervoor dat de volgorde wordt gerespecteerd
+)
+
 # Maak de boxplot
 fig_box_plot = px.box(
     average_decibels_by_aircraft,
@@ -319,6 +329,7 @@ fig_box_plot = px.box(
 
 # Toon de boxplot
 st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
+
 
 # Line Chart: Tijdreeksanalyse van gemiddeld geluid
 st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
