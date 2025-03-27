@@ -239,7 +239,7 @@ else:
     category_data = average_decibels_by_aircraft[average_decibels_by_aircraft['categorie'] == selected_category]
 
 # Sorteer de data op passagiersaantal
-category_data = category_data.sort_values(by='Passagiers', ascending=True)
+category_data = category_data.sort_values(by='Passagiers', ascending=False)
 
 # Maak een interactieve grafiek met Plotly
 fig = px.bar(
@@ -254,7 +254,7 @@ fig = px.bar(
 )
 
 # Stel de x-aslimieten in
-fig.update_layout(xaxis=dict(range=[50, 105]))
+fig.update_layout(xaxis=dict(range=[70, 95]))
 
 # Toon de interactieve grafiek in Streamlit
 st.plotly_chart(fig)
