@@ -285,6 +285,9 @@ else:
     # Toon de interactieve grafiek in Streamlit
     st.plotly_chart(fig)
 
+
+
+# Bar Chart: Gemiddeld Geluid per Passagierscategorie
 # Scatterplot: Correlatie tussen passagiers en gemiddeld geluid
 st.subheader("Scatterplot: Correlatie tussen Passagiers en Geluid")
 fig_scatter_plot = px.scatter(
@@ -294,22 +297,12 @@ fig_scatter_plot = px.scatter(
     color='categorie',
     labels={'Passagiers': 'Aantal Passagiers', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Correlatie tussen Geluid en Aantal Passagiers',
-    hover_data=['type'],
-    trendline="ols",  # Voeg een regressielijn toe
-    trendline_color_override="red"  # Stel de kleur van de regressielijn in
+    hover_data=['type']
 )
 st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")
 
 # Boxplot: Spreiding van geluid per passagierscategorie
 st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
-
-# Sorteer de categorieën op de x-as van laag naar hoog
-average_decibels_by_aircraft['categorie'] = pd.Categorical(
-    average_decibels_by_aircraft['categorie'],
-    categories=['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers'],
-    ordered=True
-)
-
 fig_box_plot = px.box(
     average_decibels_by_aircraft,
     x='categorie',
@@ -319,6 +312,7 @@ fig_box_plot = px.box(
     title='Spreiding van Geluid per Passagierscategorie'
 )
 st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
+
 
 # Line Chart: Tijdreeksanalyse van gemiddeld geluid
 st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
@@ -332,6 +326,9 @@ fig_line_chart = px.line(
     title='Tijdreeksanalyse van Gemiddeld Geluid'
 )
 st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")
+
+
+
 
 # Bar Chart: Gemiddeld Geluid per Weekdag
 st.subheader("Bar Chart: Gemiddeld Geluid per Weekdag")
@@ -358,10 +355,10 @@ fig_weekday_chart = px.bar(
     color_continuous_scale='Viridis'
 )
 
-# Stel de limieten van de x-as in op 70 tot 85
+# Stel de limieten van de x-as in op 60 tot 80
 fig_weekday_chart.update_layout(
     xaxis=dict(
-        range=[70, 85]  # Limiet van de x-as van 70 tot 85
+        range=[70, 85]  # Limiet van de x-as van 60 tot 80
     )
 )
 
