@@ -153,7 +153,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import streamlit as st
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+# Define the aircraft capacity dictionary
 vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
@@ -177,6 +182,7 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
     'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30}
 }
+
 # Define passenger categories
 def categorize_by_passenger_count(passenger_count):
     if passenger_count <= 100:
@@ -193,6 +199,12 @@ def categorize_by_passenger_count(passenger_count):
 # Add passenger categories to the vliegtuig_capaciteit_passagiersaantal dictionary
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
     details['categorie'] = categorize_by_passenger_count(details['passagiers'])
+
+# Mock dataset (replace this with your actual dataset)
+data = pd.DataFrame({
+    'type': ['Boeing 737-800', 'Embraer ERJ 170-200 STD', 'Airbus A320 214', 'Boeing 777-300ER', 'Boeing 737-900'],
+    'SEL_dB': [85, 90, 95, 100, 92]
+})
 
 # Merge the passenger categories into the dataset
 filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
