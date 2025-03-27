@@ -360,5 +360,5 @@ else:
          range=[60, 80]  # Limiet van de x-as van 60 tot 80
          range=[70, 85]  # Limiet van de x-as van 60 tot 80
      )
- )
+ 
  
