@@ -205,6 +205,26 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
     'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
     'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30}
+    'Airbus A380 861': {'passagiers': 555, 'vracht_ton': 80},  # Aantal passagiers kan variëren afhankelijk van de configuratie
+    'Embraer ERJ190-100LR': {'passagiers': 98, 'vracht_ton': 8},
+    'Airbus A320 232': {'passagiers': 180, 'vracht_ton': 20},
+    'Embraer EMB-170 STD': {'passagiers': 70, 'vracht_ton': 7},
+    'Airbus A320-271N': {'passagiers': 180, 'vracht_ton': 20},
+    'Embraer EMB-195 LR': {'passagiers': 120, 'vracht_ton': 10},
+    'Airbus A320-251N': {'passagiers': 180, 'vracht_ton': 20},
+    'Boeing 737NG 958ER/W': {'passagiers': 160, 'vracht_ton': 20},
+    'Airbus A300 B4-622RF': {'passagiers': 266, 'vracht_ton': 40},
+    'Airbus A320 216': {'passagiers': 150, 'vracht_ton': 20},
+    'Airbus A330 323E': {'passagiers': 277, 'vracht_ton': 40},
+    'Airbus A319 112': {'passagiers': 156, 'vracht_ton': 20},
+    'Airbus A350 941': {'passagiers': 315, 'vracht_ton': 60},
+    'Airbus A330 302': {'passagiers': 277, 'vracht_ton': 40},
+    'Airbus A319 131': {'passagiers': 156, 'vracht_ton': 20},
+    'Boeing 787-8 Dreamliner': {'passagiers': 242, 'vracht_ton': 20},
+    'Airbus A330 323X': {'passagiers': 277, 'vracht_ton': 40},
+    'Boeing 737NG 8AS/W': {'passagiers': 160, 'vracht_ton': 20},
+    'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
+    'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
 }
 
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
