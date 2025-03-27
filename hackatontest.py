@@ -148,7 +148,6 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -172,9 +171,21 @@ def fetch_data():
 # Haal de dataset op
 data = fetch_data()
 
-# Debugging: Bekijk de meest voorkomende vliegtuigtypen
-st.write("Top 20 meest voorkomende vliegtuigtypen:")
-st.write(data['type'].value_counts().iloc[:20])
+# Genereer een lijst van de meest voorkomende vliegtuigtypen
+top_vliegtuigen = data['type'].value_counts().iloc[:10]
+
+# Maak een bar chart van de 10 meest voorkomende vliegtuigtypen
+fig_top_vliegtuigen = px.bar(
+    top_vliegtuigen.reset_index(),
+    x='type',
+    y='index',
+    orientation='h',
+    labels={'index': 'Vliegtuig Type', 'type': 'Aantal'},
+    title='Top 10 Meest Voorkomende Vliegtuigen'
+)
+
+# Toon de grafiek in Streamlit
+st.plotly_chart(fig_top_vliegtuigen)
 
 # Definieer passagierscategorieën
 def categorize_by_passenger_count(passenger_count):
@@ -229,6 +240,7 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
 }
 
+# De rest van de code blijft hetzelfde
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
     details['categorie'] = categorize_by_passenger_count(details['passagiers'])
 
