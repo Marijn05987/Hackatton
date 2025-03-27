@@ -204,7 +204,7 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
     'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
     'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
-    'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30}
+    'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30},
     'Airbus A380 861': {'passagiers': 555, 'vracht_ton': 80},  # Aantal passagiers kan variëren afhankelijk van de configuratie
     'Embraer ERJ190-100LR': {'passagiers': 98, 'vracht_ton': 8},
     'Airbus A320 232': {'passagiers': 180, 'vracht_ton': 20},
