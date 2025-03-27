@@ -330,7 +330,6 @@ st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")
 
 
 
-
 # Bar Chart: Gemiddeld Geluid per Weekdag
 st.subheader("Bar Chart: Gemiddeld Geluid per Weekdag")
 
@@ -355,4 +354,13 @@ fig_weekday_chart = px.bar(
     color='Gemiddeld_SEL_dB',
     color_continuous_scale='Viridis'
 )
+
+# Stel de limieten van de x-as in op 60 tot 80
+fig_weekday_chart.update_layout(
+    xaxis=dict(
+        range=[60, 80]  # Limiet van de x-as van 60 tot 80
+    )
+)
+
+# Toon de chart
 st.plotly_chart(fig_weekday_chart, use_container_width=True, key="weekday_chart")
