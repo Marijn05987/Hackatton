@@ -154,6 +154,9 @@ import pandas as pd
 import plotly.express as px
 import requests
 
+# Stel de maximale weergave van rijen in voor debugging
+pd.set_option('display.max_rows', 100000)  # Verhoog het aantal weergegeven rijen
+
 # Cache de gegevensophaal functie om onnodige herhalingen van verzoeken te voorkomen
 @st.cache_data
 def fetch_data():
@@ -168,6 +171,10 @@ def fetch_data():
 
 # Haal de dataset op
 data = fetch_data()
+
+# Debugging: Bekijk de meest voorkomende vliegtuigtypen
+st.write("Top 20 meest voorkomende vliegtuigtypen:")
+st.write(data['type'].value_counts().iloc[:20])
 
 # Definieer passagierscategorieën
 def categorize_by_passenger_count(passenger_count):
@@ -195,10 +202,7 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
     'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
     'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
-    'Canadair CL-600-2B19 CRJ-200LR': {'passagiers': 50, 'vracht_ton': 4},
     'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus A319 111': {'passagiers': 156, 'vracht_ton': 16},
-    'Airbus A320-214SL': {'passagiers': 180, 'vracht_ton': 20},
     'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
     'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
     'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
@@ -234,6 +238,14 @@ for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
 if 'type' not in data.columns:
     st.error("De kolom 'type' bestaat niet in de dataset. Controleer de kolomnamen en pas de code aan.")
 else:
+    # Normaliseer de vliegtuigtypen om inconsistenties te voorkomen
+    data['type'] = data['type'].str.strip().str.lower()
+
+    # Normaliseer de sleutels in vliegtuig_capaciteit_passagiersaantal
+    vliegtuig_capaciteit_passagiersaantal = {
+        k.lower(): v for k, v in vliegtuig_capaciteit_passagiersaantal.items()
+    }
+
     # Filter de dataset om alleen vliegtuigen te behouden die in vliegtuig_capaciteit_passagiersaantal staan
     filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
 
@@ -258,23 +270,23 @@ else:
     # Filter de data op basis van de geselecteerde categorie
     category_data = average_decibels_by_aircraft[average_decibels_by_aircraft['categorie'] == selected_category]
 
-# Sorteer de data op passagiersaantal
-category_data = category_data.sort_values(by='Passagiers', ascending=False)
+    # Sorteer de data op passagiersaantal
+    category_data = category_data.sort_values(by='Passagiers', ascending=False)
 
-# Maak een interactieve grafiek met Plotly
-fig = px.bar(
-    category_data,
-    x='Gemiddeld_SEL_dB',
-    y='type',
-    orientation='h',
-    color='Passagiers',
-    labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
-    title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
-    hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
-)
+    # Maak een interactieve grafiek met Plotly
+    fig = px.bar(
+        category_data,
+        x='Gemiddeld_SEL_dB',
+        y='type',
+        orientation='h',
+        color='Passagiers',
+        labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
+        title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
+        hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
+    )
 
-# Stel de x-aslimieten in
-fig.update_layout(xaxis=dict(range=[70, 85]))
+    # Stel de x-aslimieten in
+    fig.update_layout(xaxis=dict(range=[70, 85]))
 
-# Toon de interactieve grafiek in Streamlit
-st.plotly_chart(fig)
+    # Toon de interactieve grafiek in Streamlit
+    st.plotly_chart(fig)
