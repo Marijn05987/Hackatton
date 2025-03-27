@@ -285,8 +285,7 @@ else:
     # Toon de interactieve grafiek in Streamlit
     st.plotly_chart(fig)
 
-
-# Toon de interactieve bar chart
+# Bar Chart: Gemiddeld Geluid per Passagierscategorie
 st.subheader("Bar Chart: Gemiddeld Geluid per Passagierscategorie")
 fig_bar_chart = px.bar(
     category_data,
@@ -299,7 +298,7 @@ fig_bar_chart = px.bar(
     hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
 )
 fig_bar_chart.update_layout(xaxis=dict(range=[70, 85]))
-st.plotly_chart(fig_bar_chart, use_container_width=True)  # Unieke variabele
+st.plotly_chart(fig_bar_chart, use_container_width=True, key="bar_chart")  # Added unique key
 
 # Scatterplot: Correlatie tussen passagiers en gemiddeld geluid
 st.subheader("Scatterplot: Correlatie tussen Passagiers en Geluid")
@@ -312,7 +311,7 @@ fig_scatter_plot = px.scatter(
     title='Correlatie tussen Geluid en Aantal Passagiers',
     hover_data=['type']
 )
-st.plotly_chart(fig_scatter_plot, use_container_width=True)  # Unieke variabele
+st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")  # Added unique key
 
 # Boxplot: Spreiding van geluid per passagierscategorie
 st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
@@ -324,14 +323,14 @@ fig_box_plot = px.box(
     labels={'categorie': 'Passagierscategorie', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Spreiding van Geluid per Passagierscategorie'
 )
-st.plotly_chart(fig_box_plot, use_container_width=True)  # Unieke variabele
+st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")  # Added unique key
 
 # Heatmap: Correlaties tussen numerieke variabelen
 st.subheader("Heatmap: Correlaties tussen Variabelen")
 corr_matrix = filtered_data[['SEL_dB', 'passagiers']].corr()
 fig_heatmap, ax_heatmap = plt.subplots()
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', ax=ax_heatmap)
-st.pyplot(fig_heatmap)  # Unieke variabele
+st.pyplot(fig_heatmap, key="heatmap")  # Added unique key
 
 # Line Chart: Tijdreeksanalyse van gemiddeld geluid
 st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
@@ -344,4 +343,4 @@ fig_line_chart = px.line(
     labels={'date': 'Datum', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Tijdreeksanalyse van Gemiddeld Geluid'
 )
-st.plotly_chart(fig_line_chart, use_container_width=True)  # Unieke variabele
+st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")  # Added unique key
