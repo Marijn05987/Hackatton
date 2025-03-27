@@ -327,6 +327,10 @@ fig_line_chart = px.line(
 )
 st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")
 
+
+
+
+
 # Bar Chart: Gemiddeld Geluid per Weekdag
 st.subheader("Bar Chart: Gemiddeld Geluid per Weekdag")
 
@@ -344,8 +348,8 @@ weekday_data = weekday_data.sort_values('weekday')
 # Maak de bar chart
 fig_weekday_chart = px.bar(
     weekday_data,
-    x='weekday',
-    y='Gemiddeld_SEL_dB',
+    x='Gemiddeld_SEL_dB',
+    y='weekday',
     labels={'weekday': 'Weekdag', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Gemiddeld Geluid (SEL_dB) per Weekdag',
     color='Gemiddeld_SEL_dB',
