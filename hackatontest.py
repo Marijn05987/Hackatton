@@ -148,6 +148,7 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -172,15 +173,16 @@ def fetch_data():
 data = fetch_data()
 
 # Genereer een lijst van de meest voorkomende vliegtuigtypen
-top_vliegtuigen = data['type'].value_counts().iloc[:10]
+top_vliegtuigen = data['type'].value_counts().iloc[:10].reset_index()
+top_vliegtuigen.columns = ['Vliegtuig Type', 'Aantal']  # Geef de kolommen duidelijke namen
 
 # Maak een bar chart van de 10 meest voorkomende vliegtuigtypen
 fig_top_vliegtuigen = px.bar(
-    top_vliegtuigen.reset_index(),
-    x='type',
-    y='index',
+    top_vliegtuigen,
+    x='Aantal',
+    y='Vliegtuig Type',
     orientation='h',
-    labels={'index': 'Vliegtuig Type', 'type': 'Aantal'},
+    labels={'Aantal': 'Aantal Vluchten', 'Vliegtuig Type': 'Vliegtuig Type'},
     title='Top 10 Meest Voorkomende Vliegtuigen'
 )
 
@@ -205,6 +207,7 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
     'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
+    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
     'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
     'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
     'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
@@ -236,11 +239,11 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Airbus A319 131': {'passagiers': 156, 'vracht_ton': 20},
     'Boeing 787-8 Dreamliner': {'passagiers': 242, 'vracht_ton': 20},
     'Airbus A330 323X': {'passagiers': 277, 'vracht_ton': 40},
+    'Boeing 737NG 8AS/W': {'passagiers': 160, 'vracht_ton': 20},
     'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
     'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
 }
 
-# De rest van de code blijft hetzelfde
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
     details['categorie'] = categorize_by_passenger_count(details['passagiers'])
 
