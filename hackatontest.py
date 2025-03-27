@@ -246,7 +246,7 @@ else:
         category_data,
         x='Gemiddeld_SEL_dB',
         y='type',
-        plt.xlim(50,105)
+        plt.xlim(50,105),
         orientation='h',
         color='Passagiers',
         labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
