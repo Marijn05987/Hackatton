@@ -154,6 +154,20 @@ import pandas as pd
 import plotly.express as px
 import requests
 
+# Haal de dataset op via de API
+start_date = int(pd.to_datetime('2025-01-01').timestamp())
+end_date = int(pd.to_datetime('2025-03-24').timestamp())
+response = requests.get(f'https://sensornet.nl/dataserver3/event/collection/nina_events/stream?conditions%5B0%5D%5B%5D=time&conditions%5B0%5D%5B%5D=%3E%3D&conditions%5B0%5D%5B%5D={start_date}&conditions%5B1%5D%5B%5D=time&conditions%5B1%5D%5B%5D=%3C&conditions%5B1%5D%5B%5D={end_date}&conditions%5B2%5D%5B%5D=label&conditions%5B2%5D%5B%5D=in&conditions%5B2%5D%5B2%5D%5B%5D=21&conditions%5B2%5D%5B2%5D%5B%5D=32&conditions%5B2%5D%5B2%5D%5B%5D=33&conditions%5B2%5D%5B2%5D%5B%5D=34&args%5B%5D=aalsmeer&args%5B%5D=schiphol&fields%5B%5D=time&fields%5B%5D=location_short&fields%5B%5D=location_long&fields%5B%5D=duration&fields%5B%5D=SEL&fields%5B%5D=SELd&fields%5B%5D=SELe&fields%5B%5D=SELn&fields%5B%5D=SELden&fields%5B%5D=SEL_dB&fields%5B%5D=lasmax_dB&fields%5B%5D=callsign&fields%5B%5D=type&fields%5B%5D=altitude&fields%5B%5D=distance&fields%5B%5D=winddirection&fields%5B%5D=windspeed&fields%5B%5D=label&fields%5B%5D=hex_s&fields%5B%5D=registration&fields%5B%5D=icao_type&fields%5B%5D=serial&fields%5B%5D=operator&fields%5B%5D=tags')
+colnames = pd.DataFrame(response.json()['metadata'])
+data = pd.DataFrame(response.json()['rows'])
+data.columns = colnames.headers
+data['time'] = pd.to_datetime(data['time'], unit='s')
+
+# Controleer de kolomnamen in de dataset
+st.write("Kolomnamen in de dataset:", data.columns)
+
+# Controleer de eerste paar rijen van de dataset
+st.write("Voorbeeld van de dataset:", data.head())
 
 # Definieer passagierscategorieën
 def categorize_by_passenger_count(passenger_count):
@@ -196,44 +210,48 @@ vliegtuig_capaciteit_passagiersaantal = {
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
     details['categorie'] = categorize_by_passenger_count(details['passagiers'])
 
-# Filter de dataset om alleen vliegtuigen te behouden die in vliegtuig_capaciteit_passagiersaantal staan
-filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
+# Controleer of de kolom 'type' bestaat
+if 'type' not in data.columns:
+    st.error("De kolom 'type' bestaat niet in de dataset. Controleer de kolomnamen en pas de code aan.")
+else:
+    # Filter de dataset om alleen vliegtuigen te behouden die in vliegtuig_capaciteit_passagiersaantal staan
+    filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
 
-# Voeg passagiersinformatie toe aan de dataset
-filtered_data['passagiers'] = filtered_data['type'].map(
-    lambda x: vliegtuig_capaciteit_passagiersaantal[x]['passagiers']
-)
+    # Voeg passagiersinformatie toe aan de dataset
+    filtered_data['passagiers'] = filtered_data['type'].map(
+        lambda x: vliegtuig_capaciteit_passagiersaantal[x]['passagiers']
+    )
 
-# Bereken de gemiddelde SEL_dB per vliegtuigtype
-average_decibels_by_aircraft = filtered_data.groupby('type').agg(
-    Gemiddeld_SEL_dB=('SEL_dB', 'mean'),
-    Passagiers=('passagiers', 'first')
-).reset_index()
+    # Bereken de gemiddelde SEL_dB per vliegtuigtype
+    average_decibels_by_aircraft = filtered_data.groupby('type').agg(
+        Gemiddeld_SEL_dB=('SEL_dB', 'mean'),
+        Passagiers=('passagiers', 'first')
+    ).reset_index()
 
-# Voeg passagierscategorieën toe
-average_decibels_by_aircraft['categorie'] = average_decibels_by_aircraft['Passagiers'].apply(categorize_by_passenger_count)
+    # Voeg passagierscategorieën toe
+    average_decibels_by_aircraft['categorie'] = average_decibels_by_aircraft['Passagiers'].apply(categorize_by_passenger_count)
 
-# Maak een dropdownmenu voor passagierscategorieën
-categories = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers']
-selected_category = st.selectbox('Selecteer een passagierscategorie:', categories)
+    # Maak een dropdownmenu voor passagierscategorieën
+    categories = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers']
+    selected_category = st.selectbox('Selecteer een passagierscategorie:', categories)
 
-# Filter de data op basis van de geselecteerde categorie
-category_data = average_decibels_by_aircraft[average_decibels_by_aircraft['categorie'] == selected_category]
+    # Filter de data op basis van de geselecteerde categorie
+    category_data = average_decibels_by_aircraft[average_decibels_by_aircraft['categorie'] == selected_category]
 
-# Sorteer de data op passagiersaantal
-category_data = category_data.sort_values(by='Passagiers', ascending=True)
+    # Sorteer de data op passagiersaantal
+    category_data = category_data.sort_values(by='Passagiers', ascending=True)
 
-# Maak een interactieve grafiek met Plotly
-fig = px.bar(
-    category_data,
-    x='Gemiddeld_SEL_dB',
-    y='type',
-    orientation='h',
-    color='Passagiers',
-    labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
-    title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
-    hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
-)
+    # Maak een interactieve grafiek met Plotly
+    fig = px.bar(
+        category_data,
+        x='Gemiddeld_SEL_dB',
+        y='type',
+        orientation='h',
+        color='Passagiers',
+        labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
+        title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
+        hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
+    )
 
-# Toon de interactieve grafiek in Streamlit
-st.plotly_chart(fig)
+    # Toon de interactieve grafiek in Streamlit
+    st.plotly_chart(fig)
