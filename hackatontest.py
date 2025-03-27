@@ -172,10 +172,6 @@ def fetch_data():
 # Haal de dataset op
 data = fetch_data()
 
-# Debugging: Bekijk de meest voorkomende vliegtuigtypen
-st.write("Top 20 meest voorkomende vliegtuigtypen:")
-st.write(data['type'].value_counts().iloc[:20])
-
 # Definieer passagierscategorieën
 def categorize_by_passenger_count(passenger_count):
     if passenger_count <= 100:
