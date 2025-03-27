@@ -174,7 +174,7 @@ top_vliegtuigen = data['type'].value_counts().iloc[:20].index.tolist()
 # Maak een nieuwe vliegtuig_capaciteit_passagiersaantal dictionary
 # Voeg standaardwaarden toe voor passagiers en vracht_ton
 vliegtuig_capaciteit_passagiersaantal = {
-    vliegtuig: {'passagiers': 150, 'vracht_ton': 20} for vliegtuig in top_vliegtuigen
+    vliegtuig: for vliegtuig in top_vliegtuigen
 }
 
 # Debugging: Bekijk de gegenereerde dictionary
