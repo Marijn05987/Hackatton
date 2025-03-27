@@ -217,6 +217,9 @@ selected_category = st.selectbox('Selecteer een passagierscategorie:', categorie
 # Filter the data based on the selected category
 category_data = data[data['categorie'] == selected_category]
 
+# Sort the data by the number of passengers (ascending)
+category_data = category_data.sort_values(by='passagiers', ascending=True)
+
 # Create an interactive bar chart using Plotly
 fig = px.bar(
     category_data,
