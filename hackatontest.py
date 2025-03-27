@@ -287,6 +287,14 @@ else:
 
 # Bar Chart: Gemiddeld Geluid per Passagierscategorie
 st.subheader("Bar Chart: Gemiddeld Geluid per Passagierscategorie")
+
+# Sorteer de categorieën op de x-as van laag naar hoog
+average_decibels_by_aircraft['categorie'] = pd.Categorical(
+    average_decibels_by_aircraft['categorie'],
+    categories=['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers'],
+    ordered=True
+)
+
 fig_bar_chart = px.bar(
     category_data,
     x='Gemiddeld_SEL_dB',
@@ -298,7 +306,7 @@ fig_bar_chart = px.bar(
     hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
 )
 fig_bar_chart.update_layout(xaxis=dict(range=[70, 85]))
-st.plotly_chart(fig_bar_chart, use_container_width=True, key="bar_chart")  # Added unique key
+st.plotly_chart(fig_bar_chart, use_container_width=True, key="bar_chart")
 
 # Scatterplot: Correlatie tussen passagiers en gemiddeld geluid
 st.subheader("Scatterplot: Correlatie tussen Passagiers en Geluid")
@@ -311,7 +319,7 @@ fig_scatter_plot = px.scatter(
     title='Correlatie tussen Geluid en Aantal Passagiers',
     hover_data=['type']
 )
-st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")  # Added unique key
+st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")
 
 # Boxplot: Spreiding van geluid per passagierscategorie
 st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
@@ -323,14 +331,21 @@ fig_box_plot = px.box(
     labels={'categorie': 'Passagierscategorie', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Spreiding van Geluid per Passagierscategorie'
 )
-st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")  # Added unique key
+st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
 
 # Heatmap: Correlaties tussen numerieke variabelen
 st.subheader("Heatmap: Correlaties tussen Variabelen")
 corr_matrix = filtered_data[['SEL_dB', 'passagiers']].corr()
-fig_heatmap, ax_heatmap = plt.subplots()
+
+# Maak de heatmap met Seaborn
+fig_heatmap, ax_heatmap = plt.subplots(figsize=(8, 6))  # Stel de grootte van de heatmap in
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', ax=ax_heatmap)
-st.pyplot(fig_heatmap, key="heatmap")  # Added unique key
+
+# Voeg een titel toe aan de heatmap
+ax_heatmap.set_title("Correlaties tussen SEL_dB en Passagiers", fontsize=14)
+
+# Toon de heatmap in Streamlit
+st.pyplot(fig_heatmap)  # Geen key nodig
 
 # Line Chart: Tijdreeksanalyse van gemiddeld geluid
 st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
@@ -343,4 +358,4 @@ fig_line_chart = px.line(
     labels={'date': 'Datum', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
     title='Tijdreeksanalyse van Gemiddeld Geluid'
 )
-st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")  # Added unique key
+st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")
