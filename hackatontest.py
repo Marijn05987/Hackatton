@@ -172,68 +172,6 @@ def fetch_data():
 # Haal de dataset op
 data = fetch_data()
 
-# Debugging: Bekijk de meest voorkomende vliegtuigtypen
-st.write("Top 20 meest voorkomende vliegtuigtypen:")
-st.write(data['type'].value_counts().iloc[:20])
-
-# Definieer passagierscategorieën
-def categorize_by_passenger_count(passenger_count):
-    if passenger_count <= 100:
-        return '0-100 Passagiers'
-    elif 101 <= passenger_count <= 150:
-        return '101-150 Passagiers'
-    elif 151 <= passenger_count <= 200:
-        return '151-200 Passagiers'
-    elif 201 <= passenger_count <= 300:
-        return '201-300 Passagiers'
-    else:
-        return '301+ Passagiers'
-
-# Voeg passagierscategorieën toe aan vliegtuig_capaciteit_passagiersaantal
-vliegtuig_capaciteit_passagiersaantal = {
-    'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
-    'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
-    'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
-    'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
-    'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
-    'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
-    'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
-    'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
-    'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
-    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
-    'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
-    'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
-    'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
-    'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
-    'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
-    'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30},
-    'Airbus A380 861': {'passagiers': 555, 'vracht_ton': 80},  # Aantal passagiers kan variëren afhankelijk van de configuratie
-    'Embraer ERJ190-100LR': {'passagiers': 98, 'vracht_ton': 8},
-    'Airbus A320 232': {'passagiers': 180, 'vracht_ton': 20},
-    'Embraer EMB-170 STD': {'passagiers': 70, 'vracht_ton': 7},
-    'Airbus A320-271N': {'passagiers': 180, 'vracht_ton': 20},
-    'Embraer EMB-195 LR': {'passagiers': 120, 'vracht_ton': 10},
-    'Airbus A320-251N': {'passagiers': 180, 'vracht_ton': 20},
-    'Boeing 737NG 958ER/W': {'passagiers': 160, 'vracht_ton': 20},
-    'Airbus A300 B4-622RF': {'passagiers': 266, 'vracht_ton': 40},
-    'Airbus A320 216': {'passagiers': 150, 'vracht_ton': 20},
-    'Airbus A330 323E': {'passagiers': 277, 'vracht_ton': 40},
-    'Airbus A319 112': {'passagiers': 156, 'vracht_ton': 20},
-    'Airbus A350 941': {'passagiers': 315, 'vracht_ton': 60},
-    'Airbus A330 302': {'passagiers': 277, 'vracht_ton': 40},
-    'Airbus A319 131': {'passagiers': 156, 'vracht_ton': 20},
-    'Boeing 787-8 Dreamliner': {'passagiers': 242, 'vracht_ton': 20},
-    'Airbus A330 323X': {'passagiers': 277, 'vracht_ton': 40},
-    'Boeing 737NG 8AS/W': {'passagiers': 160, 'vracht_ton': 20},
-    'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
-    'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
-}
-
-for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
-    details['categorie'] = categorize_by_passenger_count(details['passagiers'])
-
 # Controleer of de kolom 'type' bestaat
 if 'type' not in data.columns:
     st.error("De kolom 'type' bestaat niet in de dataset. Controleer de kolomnamen en pas de code aan.")
@@ -241,9 +179,46 @@ else:
     # Normaliseer de vliegtuigtypen om inconsistenties te voorkomen
     data['type'] = data['type'].str.strip().str.lower()
 
-    # Normaliseer de sleutels in vliegtuig_capaciteit_passagiersaantal
+    # Stel vliegtuigcapaciteit in
     vliegtuig_capaciteit_passagiersaantal = {
-        k.lower(): v for k, v in vliegtuig_capaciteit_passagiersaantal.items()
+        'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
+        'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
+        'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
+        'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
+        'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
+        'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
+        'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
+        'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
+        'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
+        'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
+        'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
+        'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
+        'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
+        'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
+        'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
+        'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
+        'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
+        'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30},
+        'Airbus A380 861': {'passagiers': 555, 'vracht_ton': 80},
+        'Embraer ERJ190-100LR': {'passagiers': 98, 'vracht_ton': 8},
+        'Airbus A320 232': {'passagiers': 180, 'vracht_ton': 20},
+        'Embraer EMB-170 STD': {'passagiers': 70, 'vracht_ton': 7},
+        'Airbus A320-271N': {'passagiers': 180, 'vracht_ton': 20},
+        'Embraer EMB-195 LR': {'passagiers': 120, 'vracht_ton': 10},
+        'Airbus A320-251N': {'passagiers': 180, 'vracht_ton': 20},
+        'Boeing 737NG 958ER/W': {'passagiers': 160, 'vracht_ton': 20},
+        'Airbus A300 B4-622RF': {'passagiers': 266, 'vracht_ton': 40},
+        'Airbus A320 216': {'passagiers': 150, 'vracht_ton': 20},
+        'Airbus A330 323E': {'passagiers': 277, 'vracht_ton': 40},
+        'Airbus A319 112': {'passagiers': 156, 'vracht_ton': 20},
+        'Airbus A350 941': {'passagiers': 315, 'vracht_ton': 60},
+        'Airbus A330 302': {'passagiers': 277, 'vracht_ton': 40},
+        'Airbus A319 131': {'passagiers': 156, 'vracht_ton': 20},
+        'Boeing 787-8 Dreamliner': {'passagiers': 242, 'vracht_ton': 20},
+        'Airbus A330 323X': {'passagiers': 277, 'vracht_ton': 40},
+        'Boeing 737NG 8AS/W': {'passagiers': 160, 'vracht_ton': 20},
+        'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
+        'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
     }
 
     # Filter de dataset om alleen vliegtuigen te behouden die in vliegtuig_capaciteit_passagiersaantal staan
@@ -261,6 +236,18 @@ else:
     ).reset_index()
 
     # Voeg passagierscategorieën toe
+    def categorize_by_passenger_count(passenger_count):
+        if passenger_count <= 100:
+            return '0-100 Passagiers'
+        elif 101 <= passenger_count <= 150:
+            return '101-150 Passagiers'
+        elif 151 <= passenger_count <= 200:
+            return '151-200 Passagiers'
+        elif 201 <= passenger_count <= 300:
+            return '201-300 Passagiers'
+        else:
+            return '301+ Passagiers'
+
     average_decibels_by_aircraft['categorie'] = average_decibels_by_aircraft['Passagiers'].apply(categorize_by_passenger_count)
 
     # Maak een dropdownmenu voor passagierscategorieën
