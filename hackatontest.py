@@ -152,6 +152,8 @@ st.pyplot(plt)
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import seaborn as sns
+import matplotlib.pyplot as plt
 import requests
 
 # Stel de maximale weergave van rijen in voor debugging
@@ -172,21 +174,15 @@ def fetch_data():
 # Haal de dataset op
 data = fetch_data()
 
-# Definieer passagierscategorieën
-def categorize_by_passenger_count(passenger_count):
-    if passenger_count <= 100:
-        return '0-100 Passagiers'
-    elif 101 <= passenger_count <= 150:
-        return '101-150 Passagiers'
-    elif 151 <= passenger_count <= 200:
-        return '151-200 Passagiers'
-    elif 201 <= passenger_count <= 300:
-        return '201-300 Passagiers'
-    else:
-        return '301+ Passagiers'
+# Controleer of de kolom 'type' bestaat
+if 'type' not in data.columns:
+    st.error("De kolom 'type' bestaat niet in de dataset. Controleer de kolomnamen en pas de code aan.")
+else:
+    # Normaliseer de vliegtuigtypen om inconsistenties te voorkomen
+    data['type'] = data['type'].str.strip().str.lower()
 
-# Voeg passagierscategorieën toe aan vliegtuig_capaciteit_passagiersaantal
-vliegtuig_capaciteit_passagiersaantal = {
+    # Stel vliegtuigcapaciteit in
+    vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
     'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
@@ -224,22 +220,6 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Airbus A319 114': {'passagiers': 156, 'vracht_ton': 20},
     'Boeing 777 3FXER': {'passagiers': 396, 'vracht_ton': 55}
 }
-
-for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
-    details['categorie'] = categorize_by_passenger_count(details['passagiers'])
-
-# Controleer of de kolom 'type' bestaat
-if 'type' not in data.columns:
-    st.error("De kolom 'type' bestaat niet in de dataset. Controleer de kolomnamen en pas de code aan.")
-else:
-    # Normaliseer de vliegtuigtypen om inconsistenties te voorkomen
-    data['type'] = data['type'].str.strip().str.lower()
-
-    # Normaliseer de sleutels in vliegtuig_capaciteit_passagiersaantal
-    vliegtuig_capaciteit_passagiersaantal = {
-        k.lower(): v for k, v in vliegtuig_capaciteit_passagiersaantal.items()
-    }
-
     # Filter de dataset om alleen vliegtuigen te behouden die in vliegtuig_capaciteit_passagiersaantal staan
     filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
 
@@ -255,6 +235,18 @@ else:
     ).reset_index()
 
     # Voeg passagierscategorieën toe
+    def categorize_by_passenger_count(passenger_count):
+        if passenger_count <= 100:
+            return '0-100 Passagiers'
+        elif 101 <= passenger_count <= 150:
+            return '101-150 Passagiers'
+        elif 151 <= passenger_count <= 200:
+            return '151-200 Passagiers'
+        elif 201 <= passenger_count <= 300:
+            return '201-300 Passagiers'
+        else:
+            return '301+ Passagiers'
+
     average_decibels_by_aircraft['categorie'] = average_decibels_by_aircraft['Passagiers'].apply(categorize_by_passenger_count)
 
     # Maak een dropdownmenu voor passagierscategorieën
@@ -267,8 +259,9 @@ else:
     # Sorteer de data op passagiersaantal
     category_data = category_data.sort_values(by='Passagiers', ascending=False)
 
-    # Maak een interactieve grafiek met Plotly
-    fig = px.bar(
+    # Maak een interactieve bar chart met Plotly
+    st.subheader("Bar Chart: Gemiddeld Geluid per Passagierscategorie")
+    fig_bar = px.bar(
         category_data,
         x='Gemiddeld_SEL_dB',
         y='type',
@@ -278,9 +271,36 @@ else:
         title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
         hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
     )
+    st.plotly_chart(fig_bar)
 
-    # Stel de x-aslimieten in
-    fig.update_layout(xaxis=dict(range=[70, 85]))
+    # Maak een scatterplot om correlaties te tonen
+    st.subheader("Scatterplot: Geluid vs. Passagiers")
+    fig_scatter = px.scatter(
+        average_decibels_by_aircraft,
+        x='Passagiers',
+        y='Gemiddeld_SEL_dB',
+        color='categorie',
+        labels={'Passagiers': 'Aantal Passagiers', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
+        title='Correlatie tussen Geluid en Aantal Passagiers',
+        hover_data=['type']
+    )
+    st.plotly_chart(fig_scatter)
 
-    # Toon de interactieve grafiek in Streamlit
-    st.plotly_chart(fig)
+    # Maak een boxplot om de spreiding van geluid per categorie te tonen
+    st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
+    fig_box = px.box(
+        average_decibels_by_aircraft,
+        x='categorie',
+        y='Gemiddeld_SEL_dB',
+        color='categorie',
+        labels={'categorie': 'Passagierscategorie', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
+        title='Spreiding van Geluid per Passagierscategorie'
+    )
+    st.plotly_chart(fig_box)
+
+    # Maak een heatmap om correlaties tussen variabelen te tonen
+    st.subheader("Heatmap: Correlaties tussen Variabelen")
+    corr_matrix = filtered_data[['SEL_dB', 'passagiers']].corr()
+    fig, ax = plt.subplots()
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', ax=ax)
+    st.pyplot(fig)
