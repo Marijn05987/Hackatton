@@ -148,12 +148,27 @@ plt.xticks(rotation=45)
 
 # Toon de grafiek in Streamlit
 st.pyplot(plt)
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import random
+import requests
 
-# Define the aircraft capacity dictionary
+
+# Definieer passagierscategorieën
+def categorize_by_passenger_count(passenger_count):
+    if passenger_count <= 100:
+        return '0-100 Passagiers'
+    elif 101 <= passenger_count <= 150:
+        return '101-150 Passagiers'
+    elif 151 <= passenger_count <= 200:
+        return '151-200 Passagiers'
+    elif 201 <= passenger_count <= 300:
+        return '201-300 Passagiers'
+    else:
+        return '301+ Passagiers'
+
+# Voeg passagierscategorieën toe aan vliegtuig_capaciteit_passagiersaantal
 vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
@@ -178,62 +193,47 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30}
 }
 
-# Define passenger categories
-def categorize_by_passenger_count(passenger_count):
-    if passenger_count <= 100:
-        return '0-100 Passagiers'
-    elif 101 <= passenger_count <= 150:
-        return '101-150 Passagiers'
-    elif 151 <= passenger_count <= 200:
-        return '151-200 Passagiers'
-    elif 201 <= passenger_count <= 300:
-        return '201-300 Passagiers'
-    else:
-        return '301+ Passagiers'
-
-# Add passenger categories to the vliegtuig_capaciteit_passagiersaantal dictionary
 for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items():
     details['categorie'] = categorize_by_passenger_count(details['passagiers'])
 
-# Create a dataset with all aircraft from vliegtuig_capaciteit_passagiersaantal
-data = pd.DataFrame([
-    {
-        'type': aircraft,
-        'SEL_dB': random.uniform(75, 100),  # Assign random SEL_dB values for demonstration
-        'passagiers': details['passagiers']
-    }
-    for aircraft, details in vliegtuig_capaciteit_passagiersaantal.items()
-])
+# Filter de dataset om alleen vliegtuigen te behouden die in vliegtuig_capaciteit_passagiersaantal staan
+filtered_data = data[data['type'].isin(vliegtuig_capaciteit_passagiersaantal.keys())]
 
-# Merge the passenger categories into the dataset
-data['categorie'] = data['type'].map(
-    lambda x: categorize_by_passenger_count(vliegtuig_capaciteit_passagiersaantal[x]['passagiers'])
+# Voeg passagiersinformatie toe aan de dataset
+filtered_data['passagiers'] = filtered_data['type'].map(
+    lambda x: vliegtuig_capaciteit_passagiersaantal[x]['passagiers']
 )
 
-# Create a dropdown menu for passenger categories
+# Bereken de gemiddelde SEL_dB per vliegtuigtype
+average_decibels_by_aircraft = filtered_data.groupby('type').agg(
+    Gemiddeld_SEL_dB=('SEL_dB', 'mean'),
+    Passagiers=('passagiers', 'first')
+).reset_index()
+
+# Voeg passagierscategorieën toe
+average_decibels_by_aircraft['categorie'] = average_decibels_by_aircraft['Passagiers'].apply(categorize_by_passenger_count)
+
+# Maak een dropdownmenu voor passagierscategorieën
 categories = ['0-100 Passagiers', '101-150 Passagiers', '151-200 Passagiers', '201-300 Passagiers', '301+ Passagiers']
 selected_category = st.selectbox('Selecteer een passagierscategorie:', categories)
 
-# Filter the data based on the selected category
-category_data = data[data['categorie'] == selected_category]
+# Filter de data op basis van de geselecteerde categorie
+category_data = average_decibels_by_aircraft[average_decibels_by_aircraft['categorie'] == selected_category]
 
-# Sort the data by the number of passengers (ascending)
-category_data = category_data.sort_values(by='passagiers', ascending=False)
+# Sorteer de data op passagiersaantal
+category_data = category_data.sort_values(by='Passagiers', ascending=True)
 
-# Create an interactive bar chart using Plotly
+# Maak een interactieve grafiek met Plotly
 fig = px.bar(
     category_data,
-    x='SEL_dB',
+    x='Gemiddeld_SEL_dB',
     y='type',
     orientation='h',
-    color='passagiers',
-    labels={'type': 'Vliegtuig Type', 'SEL_dB': 'Gemiddeld SEL_dB', 'passagiers': 'Aantal Passagiers'},
+    color='Passagiers',
+    labels={'type': 'Vliegtuig Type', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB', 'Passagiers': 'Aantal Passagiers'},
     title=f'Gemiddeld Geluid (SEL_dB) voor {selected_category}',
-    hover_data=['SEL_dB', 'passagiers']
+    hover_data=['Gemiddeld_SEL_dB', 'Passagiers']
 )
 
-# Update the layout to set the x-axis range
-fig.update_layout(xaxis=dict(range=[50, 100]))
-
-# Show the interactive plot in Streamlit
+# Toon de interactieve grafiek in Streamlit
 st.plotly_chart(fig)
