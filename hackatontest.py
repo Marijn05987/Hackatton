@@ -297,31 +297,25 @@ fig_scatter_plot = px.scatter(
 )
 st.plotly_chart(fig_scatter_plot, use_container_width=True, key="scatter_plot")
 
-# Boxplot: Spreiding van geluid per passagierscategorie
-st.subheader("Boxplot: Spreiding van Geluid per Passagierscategorie")
-fig_box_plot = px.box(
-    average_decibels_by_aircraft,
-    x='categorie',
-    y='Gemiddeld_SEL_dB',
-    color='categorie',
-    labels={'categorie': 'Passagierscategorie', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
-    title='Spreiding van Geluid per Passagierscategorie'
-)
-st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
 
-# Line Chart: Tijdreeksanalyse van gemiddeld geluid
-st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
-filtered_data['date'] = filtered_data['time'].dt.date
-time_series = filtered_data.groupby('date').agg(Gemiddeld_SEL_dB=('SEL_dB', 'mean')).reset_index()
-fig_line_chart = px.line(
-    time_series,
-    x='date',
-    y='Gemiddeld_SEL_dB',
-    labels={'date': 'Datum', 'Gemiddeld_SEL_dB': 'Gemiddeld SEL_dB'},
-    title='Tijdreeksanalyse van Gemiddeld Geluid'
-)
-st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")
-
+ 
+ # Bar Chart: Gemiddeld Geluid per Passagierscategorie
+ # Scatterplot: Correlatie tussen passagiers en gemiddeld geluid
+ st.subheader("Scatterplot: Correlatie tussen Passagiers en Geluid")
+ fig_scatter_plot = px.scatter(
+ @@ -313,7 +309,6 @@
+ )
+ st.plotly_chart(fig_box_plot, use_container_width=True, key="box_plot")
+ 
+ 
+ # Line Chart: Tijdreeksanalyse van gemiddeld geluid
+ st.subheader("Lijngrafiek: Tijdreeksanalyse van Gemiddeld Geluid")
+ filtered_data['date'] = filtered_data['time'].dt.date
+ @@ -326,3 +321,29 @@
+     title='Tijdreeksanalyse van Gemiddeld Geluid'
+ )
+ st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")
+ 
  # Bar Chart: Gemiddeld Geluid per Weekdag
  st.subheader("Bar Chart: Gemiddeld Geluid per Weekdag")
  
