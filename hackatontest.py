@@ -194,6 +194,7 @@ average_decibels_by_aircraft.columns = ['Vliegtuig Type', 'Gemiddeld SEL_dB']
 average_decibels_by_aircraft = average_decibels_by_aircraft.sort_values(by='Gemiddeld SEL_dB', ascending=False)
 
 # Plot the data
+st.subheader(f'Gemiddeld Geluid (SEL_dB) voor {selected_category}')
 plt.figure(figsize=(12, 6))
 sns.barplot(x='Gemiddeld SEL_dB', y='Vliegtuig Type', data=average_decibels_by_aircraft, palette='viridis')
 plt.title(f'Gemiddeld Geluid (SEL_dB) voor {selected_category}', fontsize=16)
