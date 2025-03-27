@@ -322,19 +322,6 @@ fig_line_chart = px.line(
 )
 st.plotly_chart(fig_line_chart, use_container_width=True, key="line_chart")
 
-# Bar Chart: Gemiddeld Geluid per Weekdag
-st.subheader("Bar Chart: Gemiddeld Geluid per Weekdag")
-
-# Voeg een kolom toe voor de dag van de week
-filtered_data['weekday'] = filtered_data['time'].dt.day_name()
-
-# Bereken het gemiddelde SEL_dB per weekdag
-weekday_data = filtered_data.groupby('weekday').agg(Gemiddeld_SEL_dB=('SEL_dB', 'mean')).reset_index()
-
-# Sorteer de weekdagen in de juiste volgorde
-weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-weekday_data['weekday'] = pd.Categorical(weekday_data['weekday'], categories=weekday_order, ordered=True)
-weekday_data = weekday_data.sort_values('weekday')
 # Maak de bar chart
 fig_weekday_chart = px.bar(
     weekday_data,
@@ -350,6 +337,10 @@ fig_weekday_chart = px.bar(
 fig_weekday_chart.update_layout(
     xaxis=dict(
         range=[60, 90]  # Limiet van de x-as van 60 tot 90
+    ),
+    yaxis=dict(
+        categoryorder="array",  # Zet de weekdagen in een specifieke volgorde
+        categoryarray=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']  # Weekdagen van boven naar beneden
     )
 )
 
