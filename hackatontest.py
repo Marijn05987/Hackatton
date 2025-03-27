@@ -341,7 +341,7 @@ filtered_data['weekday'] = filtered_data['time'].dt.day_name()
 weekday_data = filtered_data.groupby('weekday').agg(Gemiddeld_SEL_dB=('SEL_dB', 'mean')).reset_index()
 
 # Sorteer de weekdagen in de juiste volgorde
-weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+weekday_order = ['Sunday', 'Saturday', 'Friday', 'Thursday', 'Wednesday', 'Tuesday', 'Monday'] 
 weekday_data['weekday'] = pd.Categorical(weekday_data['weekday'], categories=weekday_order, ordered=True)
 weekday_data = weekday_data.sort_values('weekday')
 
