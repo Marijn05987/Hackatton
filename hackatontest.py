@@ -81,7 +81,7 @@ load_factor = 0.85
 
 # Streamlit UI
 st.title('Geluid per Passagier en Vracht per Vliegtuigtype')
-st.markdown('Dit applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart.')
+st.markdown('Deze applicatie berekent en toont het geluid per passagier en per ton vracht voor verschillende vliegtuigtypes, gebaseerd op gegevens uit de luchtvaart.')
 
 # Haal de gegevens op van de API of gebruik mockdata
 data = fetch_data()
@@ -199,7 +199,6 @@ vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
     'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
     'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
-    'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
     'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
     'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
     'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
