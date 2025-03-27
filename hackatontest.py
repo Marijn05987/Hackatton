@@ -254,7 +254,7 @@ fig = px.bar(
 )
 
 # Stel de x-aslimieten in
-fig.update_layout(xaxis=dict(range=[70, 95]))
+fig.update_layout(xaxis=dict(range=[70, 85]))
 
 # Toon de interactieve grafiek in Streamlit
 st.plotly_chart(fig)
