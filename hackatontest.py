@@ -172,22 +172,9 @@ def fetch_data():
 # Haal de dataset op
 data = fetch_data()
 
-# Genereer een lijst van de meest voorkomende vliegtuigtypen
-top_vliegtuigen = data['type'].value_counts().iloc[:10].reset_index()
-top_vliegtuigen.columns = ['Vliegtuig Type', 'Aantal']  # Geef de kolommen duidelijke namen
-
-# Maak een bar chart van de 10 meest voorkomende vliegtuigtypen
-fig_top_vliegtuigen = px.bar(
-    top_vliegtuigen,
-    x='Aantal',
-    y='Vliegtuig Type',
-    orientation='h',
-    labels={'Aantal': 'Aantal Vluchten', 'Vliegtuig Type': 'Vliegtuig Type'},
-    title='Top 10 Meest Voorkomende Vliegtuigen'
-)
-
-# Toon de grafiek in Streamlit
-st.plotly_chart(fig_top_vliegtuigen)
+# Debugging: Bekijk de meest voorkomende vliegtuigtypen
+st.write("Top 20 meest voorkomende vliegtuigtypen:")
+st.write(data['type'].value_counts().iloc[:20])
 
 # Definieer passagierscategorieën
 def categorize_by_passenger_count(passenger_count):
