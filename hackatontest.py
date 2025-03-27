@@ -189,7 +189,6 @@ def categorize_by_passenger_count(passenger_count):
 vliegtuig_capaciteit_passagiersaantal = {
     'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
     'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
-    'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
     'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
     'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
     'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
