@@ -154,6 +154,29 @@ import seaborn as sns
 import pandas as pd
 import streamlit as st
 
+vliegtuig_capaciteit_passagiersaantal = {
+    'Boeing 737-800': {'passagiers': 189, 'vracht_ton': 20},
+    'Embraer ERJ 170-200 STD': {'passagiers': 80, 'vracht_ton': 7},
+    'Embraer ERJ 190-100 STD': {'passagiers': 98, 'vracht_ton': 8},
+    'Embraer ERJ190-100STD': {'passagiers': 98, 'vracht_ton': 8},
+    'Boeing 737-700': {'passagiers': 130, 'vracht_ton': 17},
+    'Airbus A320 214': {'passagiers': 180, 'vracht_ton': 20},
+    'Boeing 777-300ER': {'passagiers': 396, 'vracht_ton': 60},
+    'Boeing 737-900': {'passagiers': 220, 'vracht_ton': 25},
+    'Boeing 777-200': {'passagiers': 314, 'vracht_ton': 50},
+    'Airbus A319-111': {'passagiers': 156, 'vracht_ton': 16},
+    'Boeing 787-9': {'passagiers': 296, 'vracht_ton': 45},
+    'Canadair CL-600-2B19 CRJ-200LR': {'passagiers': 50, 'vracht_ton': 4},
+    'Airbus A320 214SL': {'passagiers': 180, 'vracht_ton': 20},
+    'Airbus A319 111': {'passagiers': 156, 'vracht_ton': 16},
+    'Airbus A320-214SL': {'passagiers': 180, 'vracht_ton': 20},
+    'Airbus SAS A330-203': {'passagiers': 277, 'vracht_ton': 45},
+    'Boeing 787 8': {'passagiers': 242, 'vracht_ton': 40},
+    'Airbus A320 232SL': {'passagiers': 180, 'vracht_ton': 20},
+    'Airbus SAS A330-303': {'passagiers': 277, 'vracht_ton': 45},
+    'Boeing 737-8MAX': {'passagiers': 210, 'vracht_ton': 25},
+    'Airbus A321-232': {'passagiers': 220, 'vracht_ton': 30}
+}
 # Define passenger categories
 def categorize_by_passenger_count(passenger_count):
     if passenger_count <= 100:
