@@ -720,7 +720,7 @@ with tab4:
          folium.Marker(
              location=[lat, lon],
              icon=folium.CustomIcon(
-                 icon_image='sound-sensor2.png', 
+                icon_image='/full/path/to/sound-sensor2.png', 
                  icon_size=(50, 50)
              ),
              popup=f"Sensor: {name}"
